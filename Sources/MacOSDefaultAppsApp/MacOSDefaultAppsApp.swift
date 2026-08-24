@@ -11,10 +11,18 @@ extension Notification.Name {
 @main
 struct MacOSDefaultAppsApp: App {
     init() {
-        // Run from a bare executable (swift run) the process starts as an
-        // accessory without focus; force a regular, activated app.
+        // bare executables (swift run) start as accessory without focus
         NSApplication.shared.setActivationPolicy(.regular)
         NSApplication.shared.activate(ignoringOtherApps: true)
+        // the menu cmd-f loses to the system find action; intercept
+        NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            if event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command,
+                event.charactersIgnoringModifiers == "f" {
+                NotificationCenter.default.post(name: .focusFilter, object: nil)
+                return nil
+            }
+            return event
+        }
     }
 
     var body: some Scene {

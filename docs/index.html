@@ -38,6 +38,17 @@
   ul { padding-left: 1.2rem; }
   li { margin: .3rem 0; }
   .note { color: var(--muted); font-size: .92rem; }
+  .warn {
+    border: 1px solid #b8860b55; border-left: 4px solid #d29922;
+    background: #d2992212; border-radius: 8px;
+    padding: .8rem 1rem; margin: 1rem 0; font-size: .95rem;
+  }
+  .warn strong { color: #b8860b; }
+  @media (prefers-color-scheme: dark) { .warn strong { color: #d29922; } }
+  .warn code {
+    background: var(--card); padding: .1rem .35rem; border-radius: 4px;
+    font: .85em ui-monospace, "SF Mono", Menlo, monospace;
+  }
   footer { margin-top: 3rem; color: var(--muted); font-size: .9rem; text-align: center; }
   footer a { color: var(--muted); }
 
@@ -88,8 +99,13 @@
 <div class="term">
   <div class="term-bar"><span class="dots"><i></i><i></i><i></i></span><button class="copy">Copy</button></div>
   <pre><code><span class="line"><span class="cmd"><span class="bin">brew</span> tap klabast/tap</span></span>
+<span class="line"><span class="cmd"><span class="bin">brew</span> trust klabast/tap</span>                  <span class="cmt"># newer homebrew asks for this once</span></span>
 <span class="line"><span class="cmd"><span class="bin">brew</span> install mda</span>                        <span class="cmt"># cli</span></span>
 <span class="line"><span class="cmd"><span class="bin">brew</span> install --cask macosdefaultapps</span>    <span class="cmt"># app</span></span></code></pre>
+</div>
+
+<div class="warn">
+  <strong>Not notarized yet.</strong> On first launch macOS says <em>"macOSDefaultApps.app" was blocked to protect your Mac</em> — Gatekeeper checking for an Apple developer signature this project doesn't have yet (the code is open source, the app is built by CI). To run it anyway: <em>System Settings → Privacy&nbsp;&amp;&nbsp;Security → Open&nbsp;Anyway</em>, or install with <code>brew install --cask --no-quarantine macosdefaultapps</code>. The Homebrew-built CLI is unaffected.
 </div>
 
 <h2>Why</h2>
