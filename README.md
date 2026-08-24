@@ -26,8 +26,17 @@ mda set com.sublimetext.4 md        # set handler for an extension
 mda set com.apple.Safari public.html
 mda set com.apple.Mail mailto:
 mda dump                            # all curated types with current handlers (or --json)
-mda apply settings.duti             # apply a settings file, duti-compatible
+mda save                            # snapshot current handlers to ~/.mda/default
+mda apply                           # restore the default preset
+mda apply work                      # or a named one (~/.mda/work)
+mda apply settings.duti             # or any settings file, duti-compatible
 ```
+
+## Dotfiles & presets
+
+`mda save` writes the current associations as a plain settings file to `~/.mda/` — one file per preset, human-readable, duti-syntax. Put the folder in your dotfiles (`mda save` warns when it's not under git, because unversioned saves overwrite without history). `mda apply` restores a preset: everything that can be applied is applied, apps that aren't installed are skipped and listed, and a non-zero exit tells your bootstrap script there's leftovers — re-run after installing the missing apps, it's idempotent.
+
+The app has the same feature under **Presets** in the toolbar, with a preview of what would change before anything is written.
 
 Targets are classified automatically: `md` / `.md` is an extension, `public.html` a UTI, `mailto:` a URL scheme.
 
