@@ -26,3 +26,17 @@
 "archives" = "Archiwa";
 "documents" = "Dokumenty";
 "url schemes" = "Schematy URL";
+"Presets" = "Presety";
+"No presets yet" = "Brak presetów";
+"Save Current as Preset…" = "Zapisz bieżący stan jako preset…";
+"Import File…" = "Importuj plik…";
+"Export…" = "Eksportuj…";
+"Cancel" = "Anuluj";
+"Done" = "Gotowe";
+"Save" = "Zapisz";
+"Preset name" = "Nazwa presetu";
+"not installed" = "niezainstalowana";
+"Everything already matches." = "Wszystko już się zgadza.";
+"%lld to change · %lld unchanged · %lld missing" = "%lld do zmiany · %lld bez zmian · %lld brakuje";
+"~/.mda is not a git repository — saves overwrite without history." = "~/.mda nie jest repozytorium git — zapis nadpisuje bez historii.";
+"Apply" = "Zastosuj";

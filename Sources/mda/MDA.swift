@@ -7,7 +7,7 @@ struct MDA: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "mda",
         abstract: "View and set default application associations on macOS.",
-        subcommands: [Get.self, List.self, Set.self, Dump.self, Apply.self]
+        subcommands: [Get.self, List.self, Set.self, Dump.self, Apply.self, Save.self]
     )
 }
 
@@ -100,24 +100,83 @@ struct Dump: ParsableCommand {
 
 struct Apply: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
-        abstract: "Apply a settings file (duti-compatible). Stops at the first failure."
+        abstract: "Apply a preset or settings file (duti-compatible). Applies what it can, reports the rest."
     )
 
-    @Argument(help: "Path to the settings file, or '-' for stdin.")
-    var path: String
+    @Argument(help: "Preset name, path to a settings file, or '-' for stdin. Default: preset 'default'.")
+    var source: String?
 
     func run() async throws {
+        let store = PresetStore.standard
         let text: String
-        if path == "-" {
+        switch source {
+        case nil:
+            text = try store.read("default")
+        case "-":
             text = String(decoding: FileHandle.standardInput.readDataToEndOfFile(), as: UTF8.self)
-        } else {
+        case let path? where path.contains("/") || FileManager.default.fileExists(atPath: path):
             text = try String(contentsOfFile: path, encoding: .utf8)
+        case let name?:
+            text = try store.read(name)
         }
+
         let spec = try ApplySpec.parse(text)
-        let service = SetService(registry: LaunchServicesRegistry(), writer: LaunchServicesWriter())
-        for entry in spec.lines {
-            let app = try await service.setDefault(bundleID: entry.bundleID, for: entry.target)
-            print("\(entry.target.displayString) -> \(app.name) (\(app.bundleID))")
+        let results = await ApplyService(
+            registry: LaunchServicesRegistry(), writer: LaunchServicesWriter()
+        ).apply(spec)
+
+        var counts: [String: Int] = [:]
+        for result in results {
+            let target = result.line.target.displayString
+            switch result.outcome {
+            case .applied:
+                print("applied    \(target) -> \(result.line.bundleID)")
+            case .unchanged:
+                print("unchanged  \(target)")
+            case .skippedMissingApp:
+                print("skipped    \(target) — \(result.line.bundleID) not installed")
+            case .failed(let reason):
+                print("failed     \(target) — \(reason)")
+            }
+            counts[label(for: result.outcome), default: 0] += 1
+        }
+        print(
+            ["applied", "unchanged", "skipped", "failed"]
+                .compactMap { key in counts[key].map { "\($0) \(key)" } }
+                .joined(separator: " · "))
+        if counts["skipped", default: 0] + counts["failed", default: 0] > 0 {
+            throw ExitCode(1)
+        }
+    }
+
+    private func label(for outcome: ApplyOutcome) -> String {
+        switch outcome {
+        case .applied: "applied"
+        case .unchanged: "unchanged"
+        case .skippedMissingApp: "skipped"
+        case .failed: "failed"
+        }
+    }
+}
+
+struct Save: ParsableCommand {
+    static let configuration = CommandConfiguration(
+        abstract: "Save current handlers as a preset in ~/.mda."
+    )
+
+    @Argument(help: "Preset name.")
+    var name: String = "default"
+
+    func run() throws {
+        let store = PresetStore.standard
+        let snapshot = SnapshotService(registry: LaunchServicesRegistry())
+            .build(from: try Catalog.bundled())
+        try store.save(name, text: snapshot.settingsFileText())
+        print("saved \(try store.url(for: name).path)")
+        if !store.isVersioned {
+            fputs(
+                "warning: \(store.directory.path) is not inside a git repository — saves overwrite without history. consider: git init \(store.directory.path)\n",
+                stderr)
         }
     }
 }

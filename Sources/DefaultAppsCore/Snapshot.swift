@@ -40,6 +40,25 @@ public struct Snapshot: Equatable, Sendable, Codable {
         return byBundleID.values.sorted { $0.name.lowercased() < $1.name.lowercased() }
     }
 
+    /// Current defaults as an apply-format settings file.
+    public func settingsFileText() -> String {
+        let width = entries.compactMap { $0.result.defaultApp?.bundleID.count }.max() ?? 0
+        var lines: [String] = []
+        var lastFamily: String?
+        for entry in entries {
+            guard let app = entry.result.defaultApp else { continue }
+            if entry.family != lastFamily {
+                if lastFamily != nil { lines.append("") }
+                lines.append("# \(entry.family)")
+                lastFamily = entry.family
+            }
+            let padded = app.bundleID.padding(
+                toLength: width, withPad: " ", startingAt: 0)
+            lines.append("\(padded)  \(entry.target.displayString)  # \(app.name)")
+        }
+        return lines.joined(separator: "\n") + "\n"
+    }
+
     public func entries(handledBy bundleID: String) -> [SnapshotEntry] {
         entries.filter { entry in
             entry.result.defaultApp?.bundleID == bundleID

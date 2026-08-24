@@ -26,3 +26,17 @@
 "archives" = "Archieven";
 "documents" = "Documenten";
 "url schemes" = "URL-schema's";
+"Presets" = "Presets";
+"No presets yet" = "Nog geen presets";
+"Save Current as Preset…" = "Huidige staat opslaan als preset…";
+"Import File…" = "Bestand importeren…";
+"Export…" = "Exporteren…";
+"Cancel" = "Annuleer";
+"Done" = "Klaar";
+"Save" = "Opslaan";
+"Preset name" = "Presetnaam";
+"not installed" = "niet geïnstalleerd";
+"Everything already matches." = "Alles komt al overeen.";
+"%lld to change · %lld unchanged · %lld missing" = "%lld te wijzigen · %lld ongewijzigd · %lld ontbreekt";
+"~/.mda is not a git repository — saves overwrite without history." = "~/.mda is geen git-repository — opslaan overschrijft zonder geschiedenis.";
+"Apply" = "Toepassen";

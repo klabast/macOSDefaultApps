@@ -40,7 +40,21 @@ final class AppStore {
         }
     }
 
+    struct Preview {
+        let title: String
+        let spec: ApplySpec
+        let plan: [PlannedChange]
+        var results: [AppliedChange]?
+    }
+
+    private(set) var presetNames: [String] = []
+    private(set) var storeIsVersioned = true
+    var preview: Preview?
+    var savePresetSheet = false
+    var presetName = ""
+
     private let registry = LaunchServicesRegistry()
+    private let presets = PresetStore.standard
 
     var visible: Snapshot { snapshot.filtered(filter) }
 
@@ -63,6 +77,50 @@ final class AppStore {
         } catch {
             errorMessage = String(describing: error)
         }
+        presetNames = presets.list()
+        storeIsVersioned = presets.isVersioned
+    }
+
+    func beginPreview(preset name: String) {
+        do {
+            beginPreview(text: try presets.read(name), title: name)
+        } catch {
+            errorMessage = String(describing: error)
+        }
+    }
+
+    func beginPreview(text: String, title: String) {
+        do {
+            let spec = try ApplySpec.parse(text)
+            let plan = ApplyService(registry: registry, writer: LaunchServicesWriter()).plan(spec)
+            preview = Preview(title: title, spec: spec, plan: plan, results: nil)
+        } catch {
+            errorMessage = String(describing: error)
+        }
+    }
+
+    func confirmApply() {
+        guard let spec = preview?.spec else { return }
+        Task {
+            let results = await ApplyService(registry: registry, writer: LaunchServicesWriter())
+                .apply(spec)
+            preview?.results = results
+            reload()
+        }
+    }
+
+    func savePreset() {
+        do {
+            try presets.save(presetName, text: snapshot.settingsFileText())
+            savePresetSheet = false
+            reload()
+        } catch {
+            errorMessage = String(describing: error)
+        }
+    }
+
+    func exportText() -> String {
+        snapshot.settingsFileText()
     }
 
     func setDefault(_ bundleID: String, for target: QueryTarget) {
