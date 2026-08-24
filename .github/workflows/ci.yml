@@ -1,0 +1,30 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "docs/**"
+      - "README.md"
+      - "LICENSE"
+  pull_request:
+    paths-ignore:
+      - "docs/**"
+      - "README.md"
+      - "LICENSE"
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: build
+        run: swift build
+      - name: test
+        run: swift test
+      - name: package app
+        run: scripts/package-app.sh
