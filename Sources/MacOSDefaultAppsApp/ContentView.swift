@@ -25,6 +25,16 @@ struct ContentView: View {
         } message: {
             Text(store.errorMessage ?? "")
         }
+        .sheet(
+            isPresented: Binding(
+                get: { store.preview != nil },
+                set: { if !$0 { store.preview = nil } })
+        ) {
+            PreviewSheet(store: store)
+        }
+        .sheet(isPresented: Binding(get: { store.savePresetSheet }, set: { store.savePresetSheet = $0 })) {
+            SavePresetSheet(store: store)
+        }
         .task { store.reload() }
         .onReceive(
             NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)
@@ -101,6 +111,9 @@ struct DetailView: View {
         }
         .navigationTitle(title)
         .toolbar {
+            ToolbarItem {
+                PresetsMenu(store: store)
+            }
             ToolbarItem {
                 FilterField(store: store)
             }
