@@ -126,6 +126,15 @@
 <span class="line"><span class="cmd"><span class="bin">mda</span> apply ~/.duti</span>                   <span class="cmt"># apply a settings file</span></span></code></pre>
 </div>
 
+<h2>Dotfiles</h2>
+<p>Your associations are a plain text file. Snapshot them, put <code>~/.mda</code> in your dotfiles, restore on the next machine — apps that aren't installed yet are skipped and reported, run it again after installing them.</p>
+<div class="term">
+  <div class="term-bar"><span class="dots"><i></i><i></i><i></i></span><button class="copy">Copy</button></div>
+  <pre><code><span class="line"><span class="cmd"><span class="bin">mda</span> save</span>                    <span class="cmt"># snapshot current handlers to ~/.mda/default</span></span>
+<span class="line"><span class="cmd"><span class="bin">git</span> init ~/.mda</span>             <span class="cmt"># make saves diffable (mda warns if you don't)</span></span>
+<span class="line"><span class="cmd"><span class="bin">mda</span> apply</span>                   <span class="cmt"># restore — on this or any other machine</span></span></code></pre>
+</div>
+
 <p class="note">Requires macOS 15+. Changing the default browser always shows a macOS consent dialog — that's the system, not the app.</p>
 
 <footer>
