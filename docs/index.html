@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>macOSDefaultApps</title>
+<meta name="description" content="View and set default application associations on macOS — file extensions, UTIs and URL schemes. A modern successor to SwiftDefaultApps and duti.">
+<link rel="icon" href="icon.png">
+<style>
+  :root {
+    --bg: #ffffff; --fg: #1d1d1f; --muted: #6e6e73;
+    --card: #f5f5f7; --accent: #2563c4; --border: #e2e2e6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #131316; --fg: #f5f5f7; --muted: #98989e;
+      --card: #1e1e22; --accent: #5a9cf0; --border: #2c2c31;
+    }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--fg);
+    font: 17px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    max-width: 760px; margin: 0 auto; padding: 3.5rem 1.25rem 4rem;
+  }
+  header { text-align: center; margin-bottom: 2.5rem; }
+  header img { width: 96px; height: 96px; }
+  h1 { font-size: 2rem; margin-top: .75rem; }
+  .tagline { color: var(--muted); max-width: 34em; margin: .5rem auto 1.5rem; }
+  .buttons a {
+    display: inline-block; margin: .25rem; padding: .5rem 1.1rem;
+    border-radius: 8px; text-decoration: none; font-weight: 600;
+  }
+  .primary { background: var(--accent); color: #fff; }
+  .secondary { background: var(--card); color: var(--fg); border: 1px solid var(--border); }
+  .shot { width: 100%; border-radius: 10px; border: 1px solid var(--border); margin: 1.5rem 0; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .6rem; }
+  ul { padding-left: 1.2rem; }
+  li { margin: .3rem 0; }
+  .note { color: var(--muted); font-size: .92rem; }
+  footer { margin-top: 3rem; color: var(--muted); font-size: .9rem; text-align: center; }
+  footer a { color: var(--muted); }
+
+  /* terminal blocks — deliberately dark in both themes */
+  .term {
+    background: #16181d; border: 1px solid #2b2f36; border-radius: 10px;
+    overflow: hidden; margin: 1rem 0;
+  }
+  .term-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 12px; background: #1d2026; border-bottom: 1px solid #2b2f36;
+  }
+  .dots { display: flex; gap: 6px; }
+  .dots i { width: 11px; height: 11px; border-radius: 50%; }
+  .dots i:nth-child(1) { background: #ff5f57; }
+  .dots i:nth-child(2) { background: #febc2e; }
+  .dots i:nth-child(3) { background: #28c840; }
+  .copy {
+    font: 600 12px/1 -apple-system, BlinkMacSystemFont, sans-serif;
+    color: #9da7b3; background: transparent; border: 1px solid #3a3f47;
+    border-radius: 6px; padding: 4px 9px; cursor: pointer;
+  }
+  .copy:hover { color: #e6edf3; border-color: #58606a; }
+  .term pre {
+    padding: .9rem 1.1rem; overflow-x: auto;
+    font: 13.5px/1.8 ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  .line::before { content: "$ "; color: #3fb950; user-select: none; }
+  .bin { color: #79c0ff; }
+  .cmd { color: #e6edf3; }
+  .cmt { color: #7d8590; font-style: italic; }
+</style>
+</head>
+<body>
+<header>
+  <img src="icon.png" alt="">
+  <h1>macOSDefaultApps</h1>
+  <p class="tagline">View and set default application associations on macOS — file extensions, UTIs and URL schemes. A modern successor to RCDefaultApp, SwiftDefaultApps and duti.</p>
+  <p class="buttons">
+    <a class="primary" href="https://github.com/klabast/macOSDefaultApps/releases/latest">Download</a>
+    <a class="secondary" href="https://github.com/klabast/macOSDefaultApps">GitHub</a>
+  </p>
+</header>
+
+<img class="shot" src="screenshots/by-type.png" alt="macOSDefaultApps: types grouped by family, one handler dropdown per row">
+
+<h2>Install with Homebrew</h2>
+<div class="term">
+  <div class="term-bar"><span class="dots"><i></i><i></i><i></i></span><button class="copy">Copy</button></div>
+  <pre><code><span class="line"><span class="cmd"><span class="bin">brew</span> tap klabast/tap</span></span>
+<span class="line"><span class="cmd"><span class="bin">brew</span> install mda</span>                        <span class="cmt"># cli</span></span>
+<span class="line"><span class="cmd"><span class="bin">brew</span> install --cask macosdefaultapps</span>    <span class="cmt"># app</span></span></code></pre>
+</div>
+
+<h2>Why</h2>
+<ul>
+  <li>Built for current macOS: a standalone app and a CLI, no preference pane.</li>
+  <li>App <em>and</em> CLI over the same core — point and click, or script it.</li>
+  <li>duti-compatible: <code>mda apply</code> reads your existing duti settings files unchanged.</li>
+  <li>Localized for English, Deutsch, Français, Español, Italiano, Português, Nederlands, Polski.</li>
+</ul>
+
+<h2>CLI</h2>
+<div class="term">
+  <div class="term-bar"><span class="dots"><i></i><i></i><i></i></span><button class="copy">Copy</button></div>
+  <pre><code><span class="line"><span class="cmd"><span class="bin">mda</span> get md</span>                          <span class="cmt"># default handler for .md</span></span>
+<span class="line"><span class="cmd"><span class="bin">mda</span> ls md</span>                           <span class="cmt"># all candidates, default marked *</span></span>
+<span class="line"><span class="cmd"><span class="bin">mda</span> set com.sublimetext.4 md</span>        <span class="cmt"># set a handler</span></span>
+<span class="line"><span class="cmd"><span class="bin">mda</span> dump --json</span>                     <span class="cmt"># every curated type + current handler</span></span>
+<span class="line"><span class="cmd"><span class="bin">mda</span> apply ~/.duti</span>                   <span class="cmt"># apply a settings file</span></span></code></pre>
+</div>
+
+<p class="note">Requires macOS 15+. Changing the default browser always shows a macOS consent dialog — that's the system, not the app.</p>
+
+<footer>
+  MIT · <a href="https://github.com/klabast">klabast</a>
+</footer>
+
+<script>
+  document.querySelectorAll(".term").forEach((term) => {
+    const button = term.querySelector(".copy");
+    button.addEventListener("click", async () => {
+      // commands only — never the # comments, never the $ prompt
+      const text = [...term.querySelectorAll(".cmd")]
+        .map((cmd) => cmd.textContent.trim())
+        .join("\n");
+      try {
+        await navigator.clipboard.writeText(text);
+        button.textContent = "Copied ✓";
+      } catch {
+        button.textContent = "⌘C?";
+      }
+      setTimeout(() => (button.textContent = "Copy"), 1600);
+    });
+  });
+</script>
+</body>
+</html>
