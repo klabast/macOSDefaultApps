@@ -1,0 +1,13 @@
+{
+  "families": [
+    { "name": "plain text", "extensions": ["txt", "md", "log", "csv"] },
+    { "name": "code", "extensions": ["json", "yaml", "yml", "xml", "toml", "sh", "py", "rb", "js", "ts", "swift", "go", "rs", "c", "h", "cpp", "java", "css"] },
+    { "name": "web", "extensions": ["html", "htm"], "schemes": ["http", "https"] },
+    { "name": "images", "extensions": ["png", "jpg", "jpeg", "gif", "tiff", "webp", "heic", "svg", "bmp", "ico"] },
+    { "name": "audio", "extensions": ["mp3", "m4a", "wav", "flac", "aac", "ogg", "aiff"] },
+    { "name": "video", "extensions": ["mp4", "mov", "m4v", "mkv", "avi", "webm"] },
+    { "name": "archives", "extensions": ["zip", "tar", "gz", "bz2", "xz", "7z", "rar"] },
+    { "name": "documents", "extensions": ["pdf", "rtf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "epub"] },
+    { "name": "url schemes", "schemes": ["mailto", "ftp", "ssh", "tel", "webcal"] }
+  ]
+}
