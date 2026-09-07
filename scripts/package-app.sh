@@ -22,6 +22,13 @@ cp "$BIN/macOSDefaultApps" "$APP/Contents/MacOS/"
 cp -R "$BIN"/*.bundle "$APP/Contents/Resources/"
 cp assets/AppIcon.icns "$APP/Contents/Resources/"
 
+# macos builds its per-app language picker from the main bundle, not from
+# the swiftpm resource bundle where the .lproj actually live
+LOCALIZATIONS=""
+for lproj in Sources/MacOSDefaultAppsApp/Resources/*.lproj; do
+	LOCALIZATIONS+=$'\t\t<string>'"$(basename "$lproj" .lproj)"$'</string>\n'
+done
+
 cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -38,6 +45,10 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 	<key>LSMinimumSystemVersion</key><string>15.0</string>
 	<key>NSHighResolutionCapable</key><true/>
 	<key>LSApplicationCategoryType</key><string>public.app-category.utilities</string>
+	<key>CFBundleDevelopmentRegion</key><string>en</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+${LOCALIZATIONS}	</array>
 </dict>
 </plist>
 PLIST
