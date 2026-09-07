@@ -51,9 +51,13 @@ Homebrew:
 
 ```sh
 brew tap klabast/tap
-brew install mda                        # cli
-brew install --cask macosdefaultapps    # app
+brew install --cask macosdefaultapps    # app, with mda bundled in
+brew install mda                        # cli on its own
 ```
+
+The cask puts `mda` on your PATH too, so it covers both. The formula is only
+needed if you want the CLI without the app. Neither builds from source, so
+neither needs Xcode.
 
 Or grab the app from the [latest release](https://github.com/klabast/macOSDefaultApps/releases/latest), or build from source:
 

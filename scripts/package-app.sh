@@ -11,6 +11,7 @@ SIGN_IDENTITY="${SIGN_IDENTITY:--}"
 ARCHS=(--arch arm64 --arch x86_64)
 
 swift build -c release "${ARCHS[@]}" --product macOSDefaultApps
+swift build -c release "${ARCHS[@]}" --product mda
 BIN="$(swift build -c release "${ARCHS[@]}" --show-bin-path)"
 
 APP="build/macOSDefaultApps.app"
@@ -18,6 +19,9 @@ rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 
 cp "$BIN/macOSDefaultApps" "$APP/Contents/MacOS/"
+# mda rides along: inside Contents/MacOS its Bundle.main is the .app, so it
+# finds the catalog in Contents/Resources. the cask symlinks it onto the PATH.
+cp "$BIN/mda" "$APP/Contents/MacOS/"
 # every swiftpm resource bundle (core catalog, app localizations, …)
 cp -R "$BIN"/*.bundle "$APP/Contents/Resources/"
 cp assets/AppIcon.icns "$APP/Contents/Resources/"
@@ -62,6 +66,7 @@ fi
 for bundle in "$APP/Contents/Resources"/*.bundle; do
 	codesign "${sign_opts[@]}" "$bundle"
 done
+codesign "${sign_opts[@]}" "$APP/Contents/MacOS/mda"
 codesign "${sign_opts[@]}" "$APP"
 
 codesign --verify --strict --verbose=2 "$APP"

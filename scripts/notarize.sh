@@ -24,9 +24,14 @@ rm -f "$ZIP"
 ditto -c -k --keepParent "$APP" "$ZIP"
 
 xcrun notarytool submit "$ZIP" "${creds[@]}" --wait
-xcrun stapler staple "$APP"
 rm -f "$ZIP"
 
-# what gatekeeper will say on a freshly downloaded copy
-spctl --assess --type execute --verbose=4 "$APP"
-echo "notarized + stapled $APP"
+# only bundles can carry a stapled ticket; for a bare executable gatekeeper
+# verifies against apple online instead
+if [ "${APP##*.}" = "app" ]; then
+	xcrun stapler staple "$APP"
+	spctl --assess --type execute --verbose=4 "$APP"
+	echo "notarized + stapled $APP"
+else
+	echo "notarized $APP (not stapleable — verified online by gatekeeper)"
+fi
