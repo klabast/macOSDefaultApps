@@ -1,0 +1,58 @@
+name: Bug report
+description: Something doesn't work
+labels: ["bug"]
+body:
+  - type: dropdown
+    id: surface
+    attributes:
+      label: App or CLI
+      options:
+        - macOSDefaultApps (the app)
+        - mda (the cli)
+        - both
+    validations:
+      required: true
+
+  - type: dropdown
+    id: install
+    attributes:
+      label: Installed how
+      description: Signing and Gatekeeper behave differently per path, so this narrows a lot.
+      options:
+        - brew install --cask macosdefaultapps
+        - brew install mda
+        - zip from the releases page
+        - built from source
+    validations:
+      required: true
+
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: App version from its About window, or `brew list --versions mda`. Plus your macOS version.
+      placeholder: "0.4.0 on macOS 15.6"
+    validations:
+      required: true
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, what you got instead.
+    validations:
+      required: true
+
+  - type: input
+    id: target
+    attributes:
+      label: Which type or scheme
+      description: The file extension, UTI or URL scheme involved, if it's about a specific one.
+      placeholder: ".md, public.html, mailto"
+
+  - type: textarea
+    id: mda_get
+    attributes:
+      label: Output of `mda get <ext>`
+      description: Skip if it isn't about a specific type. Paste as-is.
+      render: text
