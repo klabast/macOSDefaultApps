@@ -40,3 +40,5 @@
 "%lld to change · %lld unchanged · %lld missing" = "%lld Änderungen · %lld unverändert · %lld fehlend";
 "~/.mda is not a git repository — saves overwrite without history." = "~/.mda ist kein Git-Repository — Sichern überschreibt ohne Verlauf.";
 "Apply" = "Anwenden";
+"other types" = "Weitere Typen";
+"other schemes" = "Weitere Schemes";

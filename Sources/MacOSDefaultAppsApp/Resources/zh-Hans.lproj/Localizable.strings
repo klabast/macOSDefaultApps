@@ -40,3 +40,5 @@
 "%lld to change · %lld unchanged · %lld missing" = "%lld 项将更改 · %lld 项未变 · %lld 项缺失";
 "~/.mda is not a git repository — saves overwrite without history." = "~/.mda 不是 Git 仓库 — 存储将直接覆盖，不保留历史。";
 "Apply" = "应用";
+"other types" = "其他类型";
+"other schemes" = "其他方案";
