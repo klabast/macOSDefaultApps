@@ -7,6 +7,7 @@ struct MDA: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "mda",
         abstract: "View and set default application associations on macOS.",
+        version: Version.current,
         subcommands: [Get.self, List.self, Set.self, Dump.self, Apply.self, Save.self]
     )
 }

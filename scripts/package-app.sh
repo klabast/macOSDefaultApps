@@ -1,12 +1,12 @@
 #!/bin/bash
 # Assembles build/macOSDefaultApps.app from the swiftpm release build.
-# Usage: scripts/package-app.sh [version]   (default 0.1.0)
+# Usage: scripts/package-app.sh [version]   (default: Version.current)
 # Set SIGN_IDENTITY to a Developer ID to produce a notarizable build;
 # unset means ad-hoc, which is fine locally but the notary service rejects it.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-VERSION="${1:-0.1.0}"
+VERSION="${1:-$(sed -n 's/.*current = "\(.*\)".*/\1/p' Sources/DefaultAppsCore/Version.swift)}"
 SIGN_IDENTITY="${SIGN_IDENTITY:--}"
 ARCHS=(--arch arm64 --arch x86_64)
 
