@@ -23,6 +23,8 @@ func familySymbol(_ name: String) -> String {
     case "archives": "archivebox"
     case "documents": "doc.richtext"
     case "url schemes": "link"
+    case "other types": "square.grid.2x2"
+    case "other schemes": "link.badge.plus"
     default: "folder"
     }
 }

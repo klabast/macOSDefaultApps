@@ -54,6 +54,7 @@ final class AppStore {
     var presetName = ""
 
     private let registry = LaunchServicesRegistry()
+    private let discovery = InstalledAppScanner()
     private let presets = PresetStore.standard
 
     var visible: Snapshot { snapshot.filtered(filter) }
@@ -73,7 +74,8 @@ final class AppStore {
 
     func reload() {
         do {
-            snapshot = SnapshotService(registry: registry).build(from: try Catalog.bundled())
+            let catalog = try Catalog.bundled().extended(with: discovery.discover())
+            snapshot = SnapshotService(registry: registry).build(from: catalog)
         } catch {
             errorMessage = String(describing: error)
         }
