@@ -59,7 +59,7 @@ swift build -c release            # cli: .build/release/mda
 scripts/package-app.sh            # app: build/macOSDefaultApps.app
 ```
 
-The app is not notarized yet — if macOS blocks the first launch: System Settings → Privacy & Security → "Open Anyway". The Homebrew-built CLI has no such friction.
+The app is signed and notarized, so it opens straight away. A build you make yourself with `scripts/package-app.sh` is ad-hoc signed — macOS blocks that one on first launch: System Settings → Privacy & Security → "Open Anyway".
 
 ## Notes
 
