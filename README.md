@@ -19,12 +19,14 @@ Requires macOS 15+.
 ## CLI
 
 ```sh
+mda --version
 mda get md                          # default handler for .md
 mda ls md                           # all candidate handlers, default marked *
 mda set com.sublimetext.4 md        # set handler for an extension
 mda set com.apple.Safari public.html
 mda set com.apple.Mail mailto:
-mda dump                            # all curated types with current handlers (or --json)
+mda dump                            # curated types with current handlers (or --json)
+mda dump --all                      # every type your installed apps declare
 mda save                            # snapshot current handlers to ~/.mda/default
 mda apply                           # restore the default preset
 mda apply work                      # or a named one (~/.mda/work)
