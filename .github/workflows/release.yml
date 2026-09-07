@@ -1,0 +1,59 @@
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: import signing certificate
+        env:
+          P12_BASE64: ${{ secrets.DEVID_P12_BASE64 }}
+          P12_PASSWORD: ${{ secrets.DEVID_P12_PASSWORD }}
+        run: |
+          KC_PASS="$(uuidgen)"
+          echo "$P12_BASE64" | base64 --decode > "$RUNNER_TEMP/devid.p12"
+          security create-keychain -p "$KC_PASS" build.keychain
+          security set-keychain-settings -lut 21600 build.keychain
+          security unlock-keychain -p "$KC_PASS" build.keychain
+          security import "$RUNNER_TEMP/devid.p12" -k build.keychain \
+            -P "$P12_PASSWORD" -T /usr/bin/codesign
+          # without this codesign blocks on a ui prompt that never comes
+          security set-key-partition-list -S apple-tool:,apple:,codesign: \
+            -s -k "$KC_PASS" build.keychain >/dev/null
+          security list-keychains -d user -s build.keychain login.keychain
+          rm -f "$RUNNER_TEMP/devid.p12"
+
+      - name: package
+        env:
+          SIGN_IDENTITY: ${{ secrets.DEVID_IDENTITY }}
+        run: scripts/package-app.sh "${GITHUB_REF_NAME#v}"
+
+      - name: notarize
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
+        run: |
+          echo "$ASC_KEY_P8_BASE64" | base64 --decode > "$RUNNER_TEMP/asc.p8"
+          ASC_KEY_PATH="$RUNNER_TEMP/asc.p8" scripts/notarize.sh
+          rm -f "$RUNNER_TEMP/asc.p8"
+
+      - name: zip
+        run: |
+          ditto -c -k --keepParent build/macOSDefaultApps.app \
+            "build/macOSDefaultApps-${GITHUB_REF_NAME#v}.zip"
+
+      - name: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" --generate-notes \
+            "build/macOSDefaultApps-${GITHUB_REF_NAME#v}.zip"

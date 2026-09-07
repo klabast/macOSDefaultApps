@@ -1,11 +1,13 @@
 #!/bin/bash
 # Assembles build/macOSDefaultApps.app from the swiftpm release build.
 # Usage: scripts/package-app.sh [version]   (default 0.1.0)
-# Signing is ad-hoc; proper signing/notarization comes with release CI.
+# Set SIGN_IDENTITY to a Developer ID to produce a notarizable build;
+# unset means ad-hoc, which is fine locally but the notary service rejects it.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
 VERSION="${1:-0.1.0}"
+SIGN_IDENTITY="${SIGN_IDENTITY:--}"
 ARCHS=(--arch arm64 --arch x86_64)
 
 swift build -c release "${ARCHS[@]}" --product macOSDefaultApps
@@ -40,5 +42,16 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 </plist>
 PLIST
 
-codesign --force -s - "$APP"
-echo "built $APP"
+sign_opts=(--force --sign "$SIGN_IDENTITY")
+if [ "$SIGN_IDENTITY" != "-" ]; then
+	sign_opts+=(--options runtime --timestamp)
+fi
+
+# nested bundles before the outer one; --deep signs nested code wrong
+for bundle in "$APP/Contents/Resources"/*.bundle; do
+	codesign "${sign_opts[@]}" "$bundle"
+done
+codesign "${sign_opts[@]}" "$APP"
+
+codesign --verify --strict --verbose=2 "$APP"
+echo "built $APP (identity: $SIGN_IDENTITY)"

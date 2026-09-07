@@ -2,3 +2,5 @@
 .DS_Store
 build/
 assets/AppIcon.iconset/
+*.p12
+*.p8
