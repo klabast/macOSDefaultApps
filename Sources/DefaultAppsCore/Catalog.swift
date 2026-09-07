@@ -1,8 +1,9 @@
 import Foundation
 
 /// Curated list of type families shown by `mda dump` and the UI.
-/// There is no API to enumerate "all file types", so the catalog is data:
-/// `Resources/catalog.json`, easy to extend without touching code.
+/// Data rather than code: `Resources/catalog.json`, easy to extend.
+/// This is the curated front page, not the full set — `TypeDiscovery`
+/// finds the rest and `extended(with:)` appends it.
 public struct Catalog: Equatable, Sendable, Decodable {
     public let families: [TypeFamily]
 
