@@ -13,6 +13,7 @@ Requires macOS 15+.
 - Browse types by family (text, code, images, …) or flip to a per-app view showing everything an app handles — including who currently owns each type
 - Change a handler from the dropdown in each row, or pick any app via "Other…"
 - Filter across extensions, UTIs and app names (⌘F)
+- Covers every type and URL scheme your installed apps declare — ~1300 extensions and ~185 schemes on a typical Mac, not a fixed list
 - Localized: English, Deutsch, Français, Español, Italiano, Português, Nederlands, Polski, 简体中文
 
 ## CLI
