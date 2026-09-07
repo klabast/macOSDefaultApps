@@ -31,6 +31,14 @@ jobs:
           security list-keychains -d user -s build.keychain login.keychain
           rm -f "$RUNNER_TEMP/devid.p12"
 
+      - name: version matches tag
+        run: |
+          declared="$(sed -n 's/.*current = "\(.*\)".*/\1/p' Sources/DefaultAppsCore/Version.swift)"
+          if [ "$declared" != "${GITHUB_REF_NAME#v}" ]; then
+            echo "::error::tag is ${GITHUB_REF_NAME} but Version.current is ${declared} — bump Version.swift" >&2
+            exit 1
+          fi
+
       - name: package
         env:
           SIGN_IDENTITY: ${{ secrets.DEVID_IDENTITY }}
