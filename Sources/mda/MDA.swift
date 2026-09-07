@@ -82,9 +82,16 @@ struct Dump: ParsableCommand {
     @Flag(help: "Emit JSON instead of tab-separated lines.")
     var json = false
 
+    @Flag(help: "Also include every type and scheme the installed apps declare.")
+    var all = false
+
     func run() throws {
-        let snapshot = try SnapshotService(registry: LaunchServicesRegistry())
-            .build(from: Catalog.bundled())
+        var catalog = try Catalog.bundled()
+        if all {
+            catalog = catalog.extended(with: InstalledAppScanner().discover())
+        }
+        let snapshot = SnapshotService(registry: LaunchServicesRegistry())
+            .build(from: catalog)
         if json {
             let encoder = JSONEncoder()
             encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
