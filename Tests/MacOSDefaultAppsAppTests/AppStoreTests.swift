@@ -64,9 +64,25 @@ struct AppStoreTests {
 
     func makeStore(
         registry: any HandlerRegistry, discovery: any TypeDiscovery = FakeDiscovery(extensions: ["ipynb"]),
-        writer: FakeWriter = FakeWriter()
+        writer: FakeWriter = FakeWriter(), releases: any ReleaseFeed = FakeReleaseFeed(tag: "v0.0.1")
     ) -> AppStore {
-        AppStore(registry: registry, discovery: discovery, writer: writer, locations: locations)
+        AppStore(
+            registry: registry, discovery: discovery, writer: writer, releases: releases,
+            locations: locations)
+    }
+
+    @Test("a newer release is offered, a failed check stays quiet")
+    func updateCheck() async {
+        let store = makeStore(registry: registry, releases: FakeReleaseFeed(tag: "v9.9.9"))
+        await store.checkForUpdate()
+        #expect(store.availableUpdate == "9.9.9")
+
+        let offline = makeStore(
+            registry: registry,
+            releases: FakeReleaseFeed(tag: "", error: URLError(.notConnectedToInternet)))
+        await offline.checkForUpdate()
+        #expect(offline.availableUpdate == nil)
+        #expect(offline.errorMessage == nil)
     }
 
     @Test("reload joins the bundled catalog with discovered types and records the restore point")

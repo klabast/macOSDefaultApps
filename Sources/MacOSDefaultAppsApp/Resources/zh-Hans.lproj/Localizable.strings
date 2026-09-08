@@ -44,3 +44,6 @@
 "other schemes" = "其他方案";
 "Initial State" = "初始状态";
 "Restore Initial State…" = "恢复初始状态…";
+"Update available" = "有可用更新";
+"Go to GitHub" = "前往 GitHub";
+"Version %@ is available, you have %@." = "有新版本 %@，当前版本为 %@。";

@@ -56,9 +56,12 @@ final class AppStore {
     var savePresetSheet = false
     var presetName = ""
 
+    var availableUpdate: String?
+
     private let registry: any HandlerRegistry
     private let discovery: any TypeDiscovery
     private let writer: any HandlerWriter
+    private let releases: any ReleaseFeed
     private let presets: PresetStore
     private let restorePoint: RestorePoint
 
@@ -66,13 +69,21 @@ final class AppStore {
         registry: any HandlerRegistry = LaunchServicesRegistry(),
         discovery: any TypeDiscovery = InstalledAppScanner(),
         writer: any HandlerWriter = LaunchServicesWriter(),
+        releases: any ReleaseFeed = GitHubReleases(),
         locations: Locations = .standard
     ) {
         self.registry = registry
         self.discovery = discovery
         self.writer = writer
+        self.releases = releases
         presets = PresetStore(directory: locations.presets)
         restorePoint = RestorePoint(directory: locations.state, registry: registry)
+    }
+
+    /// No network, rate limit, whatever: an update check that fails is not
+    /// news the user needs.
+    func checkForUpdate() async {
+        availableUpdate = try? await UpdateCheck(feed: releases).newerVersion()
     }
 
     var visible: Snapshot { snapshot.filtered(filter) }
