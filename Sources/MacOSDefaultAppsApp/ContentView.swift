@@ -267,7 +267,7 @@ struct AppEntryRow: View {
                     .help(t("Default"))
             } else {
                 Button(t("Make Default")) {
-                    store.setDefault(app.bundleID, for: entry.target)
+                    Task { await store.setDefault(app.bundleID, for: entry.target) }
                 }
             }
         }

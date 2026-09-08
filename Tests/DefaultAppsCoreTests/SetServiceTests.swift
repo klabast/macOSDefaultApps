@@ -1,21 +1,6 @@
 import Testing
+import DefaultAppsTestSupport
 @testable import DefaultAppsCore
-
-final class FakeWriter: HandlerWriter, @unchecked Sendable {
-    var typeCalls: [(bundleID: String, uti: String)] = []
-    var schemeCalls: [(bundleID: String, scheme: String)] = []
-    var error: (any Error)?
-
-    func setDefaultApplication(_ app: AppInfo, forType uti: String) async throws {
-        if let error { throw error }
-        typeCalls.append((app.bundleID, uti))
-    }
-
-    func setDefaultApplication(_ app: AppInfo, forScheme scheme: String) async throws {
-        if let error { throw error }
-        schemeCalls.append((app.bundleID, scheme))
-    }
-}
 
 @Suite("setting handlers")
 struct SetServiceTests {

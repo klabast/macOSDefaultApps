@@ -53,11 +53,24 @@ final class AppStore {
     var savePresetSheet = false
     var presetName = ""
 
-    private let registry = LaunchServicesRegistry()
-    private let discovery = InstalledAppScanner()
-    private let presets = PresetStore.standard
+    private let registry: any HandlerRegistry
+    private let discovery: any TypeDiscovery
+    private let writer: any HandlerWriter
+    private let presets: PresetStore
+    private let restorePoint: RestorePoint
 
-    private var restorePoint: RestorePoint { RestorePoint.standard(registry: registry) }
+    init(
+        registry: any HandlerRegistry = LaunchServicesRegistry(),
+        discovery: any TypeDiscovery = InstalledAppScanner(),
+        writer: any HandlerWriter = LaunchServicesWriter(),
+        locations: Locations = .standard
+    ) {
+        self.registry = registry
+        self.discovery = discovery
+        self.writer = writer
+        presets = PresetStore(directory: locations.presets)
+        restorePoint = RestorePoint(directory: locations.state, registry: registry)
+    }
 
     var visible: Snapshot { snapshot.filtered(filter) }
 
@@ -106,21 +119,18 @@ final class AppStore {
     func beginPreview(text: String, title: String) {
         do {
             let spec = try ApplySpec.parse(text)
-            let plan = ApplyService(registry: registry, writer: LaunchServicesWriter()).plan(spec)
+            let plan = ApplyService(registry: registry, writer: writer).plan(spec)
             preview = Preview(title: title, plan: plan, results: nil)
         } catch {
             errorMessage = String(describing: error)
         }
     }
 
-    func confirmApply() {
+    func confirmApply() async {
         guard let plan = preview?.plan else { return }
-        Task {
-            let results = await ApplyService(registry: registry, writer: LaunchServicesWriter())
-                .apply(plan)
-            preview?.results = results
-            reload()
-        }
+        let results = await ApplyService(registry: registry, writer: writer).apply(plan)
+        preview?.results = results
+        reload()
     }
 
     func savePreset() {
@@ -137,17 +147,15 @@ final class AppStore {
         snapshot.settingsFileText()
     }
 
-    func setDefault(_ bundleID: String, for target: QueryTarget) {
+    func setDefault(_ bundleID: String, for target: QueryTarget) async {
         busy.insert(target.displayString)
-        Task {
-            do {
-                _ = try await SetService(registry: registry, writer: LaunchServicesWriter())
-                    .setDefault(bundleID: bundleID, for: target)
-            } catch {
-                errorMessage = String(describing: error)
-            }
-            reload()
-            busy.remove(target.displayString)
+        do {
+            _ = try await SetService(registry: registry, writer: writer)
+                .setDefault(bundleID: bundleID, for: target)
+        } catch {
+            errorMessage = String(describing: error)
         }
+        reload()
+        busy.remove(target.displayString)
     }
 }

@@ -2,14 +2,6 @@ import Foundation
 import Testing
 @testable import DefaultAppsCore
 
-struct FakeDiscovery: TypeDiscovery {
-    var extensions: Set<String> = []
-    var schemes: Set<String> = []
-    func discover() -> DiscoveredTypes {
-        DiscoveredTypes(extensions: extensions, schemes: schemes)
-    }
-}
-
 @Suite("catalog extended by discovery")
 struct TypeDiscoveryTests {
     let curated = Catalog(families: [

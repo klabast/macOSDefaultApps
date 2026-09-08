@@ -1,4 +1,5 @@
 import Testing
+import DefaultAppsTestSupport
 @testable import DefaultAppsCore
 
 @Suite("apply planning and execution")

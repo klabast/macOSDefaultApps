@@ -98,7 +98,7 @@ struct PreviewSheet: View {
             Spacer()
             if preview.results == nil {
                 Button(t("Cancel")) { store.preview = nil }
-                Button(t("Apply")) { store.confirmApply() }
+                Button(t("Apply")) { Task { await store.confirmApply() } }
                     .buttonStyle(.borderedProminent)
                     .disabled(changes == 0)
             } else {

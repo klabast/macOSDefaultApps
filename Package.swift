@@ -27,7 +27,19 @@ let package = Package(
             dependencies: ["DefaultAppsCore"],
             resources: [.process("Resources")]
         ),
-        .testTarget(name: "DefaultAppsCoreTests", dependencies: ["DefaultAppsCore"]),
+        .target(
+            name: "DefaultAppsTestSupport",
+            dependencies: ["DefaultAppsCore"],
+            path: "Tests/DefaultAppsTestSupport"
+        ),
+        .testTarget(
+            name: "DefaultAppsCoreTests",
+            dependencies: ["DefaultAppsCore", "DefaultAppsTestSupport"]
+        ),
         .testTarget(name: "MDATests", dependencies: ["mda"]),
+        .testTarget(
+            name: "MacOSDefaultAppsAppTests",
+            dependencies: ["MacOSDefaultAppsApp", "DefaultAppsTestSupport"]
+        ),
     ]
 )
