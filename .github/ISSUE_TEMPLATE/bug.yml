@@ -17,7 +17,8 @@ body:
     id: install
     attributes:
       label: Installed how
-      description: Signing and Gatekeeper behave differently per path, so this narrows a lot.
+      description: Signing and Gatekeeper behave differently per path, so this narrows a lot. Tick everything that applies.
+      multiple: true
       options:
         - brew install --cask macosdefaultapps
         - brew install mda
@@ -30,7 +31,7 @@ body:
     id: versions
     attributes:
       label: Versions
-      description: "`mda --version`, or the app version from its About window. Plus your macOS version."
+      description: "`mda --version`, or the app version from its About window, both if they differ. Plus your macOS version."
       placeholder: "0.7.1 on macOS 15.6"
     validations:
       required: true
