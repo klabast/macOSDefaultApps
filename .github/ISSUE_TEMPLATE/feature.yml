@@ -1,0 +1,29 @@
+name: Feature request
+description: Something the app or the cli should do
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What should it do
+      description: The behaviour you want, not how to build it.
+    validations:
+      required: true
+
+  - type: textarea
+    id: why
+    attributes:
+      label: Why
+      description: What you do today instead, and what that costs you.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: surface
+    attributes:
+      label: App or CLI
+      options:
+        - macOSDefaultApps (the app)
+        - mda (the cli)
+        - both
+        - don't care
