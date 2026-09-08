@@ -74,6 +74,23 @@ public struct Snapshot: Equatable, Sendable, Codable {
     }
 }
 
+public struct FamilyGroup: Equatable, Sendable {
+    public let name: String
+    public let entries: [SnapshotEntry]
+}
+
+extension Array where Element == SnapshotEntry {
+    public func groupedByFamily() -> [FamilyGroup] {
+        var order: [String] = []
+        var byName: [String: [SnapshotEntry]] = [:]
+        for entry in self {
+            if byName[entry.family] == nil { order.append(entry.family) }
+            byName[entry.family, default: []].append(entry)
+        }
+        return order.map { FamilyGroup(name: $0, entries: byName[$0] ?? []) }
+    }
+}
+
 public struct SnapshotService: Sendable {
     let registry: any HandlerRegistry
 
