@@ -48,6 +48,7 @@ final class AppStore {
     }
 
     private(set) var presetNames: [String] = []
+    private(set) var hasRestorePoint = false
     private(set) var storeIsVersioned = true
     var preview: Preview?
     var savePresetSheet = false
@@ -56,6 +57,8 @@ final class AppStore {
     private let registry = LaunchServicesRegistry()
     private let discovery = InstalledAppScanner()
     private let presets = PresetStore.standard
+
+    private var restorePoint: RestorePoint { RestorePoint.standard(registry: registry) }
 
     var visible: Snapshot { snapshot.filtered(filter) }
 
@@ -76,16 +79,26 @@ final class AppStore {
         do {
             let catalog = try Catalog.bundled().extended(with: discovery.discover())
             snapshot = SnapshotService(registry: registry).build(from: catalog)
+            try restorePoint.captureIfMissing(from: snapshot)
         } catch {
             errorMessage = String(describing: error)
         }
         presetNames = presets.list()
+        hasRestorePoint = restorePoint.exists
         storeIsVersioned = presets.isVersioned
     }
 
     func beginPreview(preset name: String) {
         do {
             beginPreview(text: try presets.read(name), title: name)
+        } catch {
+            errorMessage = String(describing: error)
+        }
+    }
+
+    func beginPreviewRestorePoint() {
+        do {
+            beginPreview(text: try restorePoint.text(), title: t("Initial State"))
         } catch {
             errorMessage = String(describing: error)
         }
