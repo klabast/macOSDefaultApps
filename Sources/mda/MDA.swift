@@ -8,7 +8,7 @@ struct MDA: AsyncParsableCommand {
         commandName: "mda",
         abstract: "View and set default application associations on macOS.",
         version: Version.current,
-        subcommands: [Get.self, List.self, Set.self, Dump.self, Apply.self, Save.self]
+        subcommands: [Get.self, List.self, SetDefault.self, Dump.self, Apply.self, Save.self]
     )
 }
 
@@ -58,8 +58,9 @@ struct List: ParsableCommand {
     }
 }
 
-struct Set: AsyncParsableCommand {
+struct SetDefault: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
+        commandName: "set",
         abstract: "Set the default handler. May trigger a consent dialog for http/https."
     )
 
@@ -140,17 +141,14 @@ struct Apply: AsyncParsableCommand {
         var counts: [String: Int] = [:]
         for result in results {
             let target = result.line.target.displayString
-            switch result.outcome {
-            case .applied:
-                print("applied    \(target) -> \(result.line.bundleID)")
-            case .unchanged:
-                print("unchanged  \(target)")
-            case .skippedMissingApp:
-                print("skipped    \(target) — \(result.line.bundleID) not installed")
-            case .failed(let reason):
-                print("failed     \(target) — \(reason)")
+            let (label, detail): (String, String) = switch result.outcome {
+            case .applied: ("applied", "\(target) -> \(result.line.bundleID)")
+            case .unchanged: ("unchanged", target)
+            case .skippedMissingApp: ("skipped", "\(target) — \(result.line.bundleID) not installed")
+            case .failed(let reason): ("failed", "\(target) — \(reason)")
             }
-            counts[label(for: result.outcome), default: 0] += 1
+            print(label.padding(toLength: 11, withPad: " ", startingAt: 0) + detail)
+            counts[label, default: 0] += 1
         }
         print(
             ["applied", "unchanged", "skipped", "failed"]
@@ -158,15 +156,6 @@ struct Apply: AsyncParsableCommand {
                 .joined(separator: " · "))
         if counts["skipped", default: 0] + counts["failed", default: 0] > 0 {
             throw ExitCode(1)
-        }
-    }
-
-    private func label(for outcome: ApplyOutcome) -> String {
-        switch outcome {
-        case .applied: "applied"
-        case .unchanged: "unchanged"
-        case .skippedMissingApp: "skipped"
-        case .failed: "failed"
         }
     }
 }
@@ -194,9 +183,9 @@ struct Save: ParsableCommand {
     }
 }
 
-/// Writes the pre-mda state to the 'initial' preset on the first run that is
-/// about to change something. A failure here warns but does not block the
-/// command the user actually asked for.
+/// Captures the restore point on the first run that is about to change
+/// something. A failure here warns but does not block the command the user
+/// actually asked for.
 private func recordRestorePoint() {
     let restore = RestorePoint.standard(registry: LaunchServicesRegistry())
     do {

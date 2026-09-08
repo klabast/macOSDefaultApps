@@ -1,11 +1,7 @@
 import Foundation
 
-/// The real `TypeDiscovery`: reads what installed apps declare they can open.
-///
-/// There is no public API to enumerate LaunchServices, but every app states its
-/// file types and url schemes in its own Info.plist, and the union of those is
-/// the set of things a default can actually be set for. Spotlight would widen
-/// the search by ~1% and add an index dependency, so this walks directories.
+/// The real `TypeDiscovery`: the union of what installed apps declare in
+/// their Info.plist. Why this and not LaunchServices or Spotlight: ADR 0001.
 public struct InstalledAppScanner: TypeDiscovery {
     public static let defaultSearchPaths: [URL] = [
         URL(filePath: "/Applications"),
@@ -42,7 +38,7 @@ public struct InstalledAppScanner: TypeDiscovery {
                 guard depth <= maxDepth,
                       let entries = try? FileManager.default.contentsOfDirectory(
                         at: dir, includingPropertiesForKeys: [.isDirectoryKey],
-                        options: [.skipsHiddenFiles, .skipsPackageDescendants])
+                        options: [.skipsHiddenFiles])
                 else { continue }
                 for entry in entries {
                     if entry.pathExtension == "app" {
