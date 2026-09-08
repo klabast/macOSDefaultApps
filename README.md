@@ -51,6 +51,7 @@ The app has the same thing under **Presets**, with a preview before anything is 
 
 ```sh
 brew tap klabast/tap
+brew trust klabast/tap                  # required for third-party taps
 brew install --cask macosdefaultapps    # app, with mda bundled in
 brew install mda                        # cli on its own
 ```
