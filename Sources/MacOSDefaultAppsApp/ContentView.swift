@@ -35,7 +35,25 @@ struct ContentView: View {
         .sheet(isPresented: Binding(get: { store.savePresetSheet }, set: { store.savePresetSheet = $0 })) {
             SavePresetSheet(store: store)
         }
+        .alert(
+            t("Update available"),
+            isPresented: Binding(
+                get: { store.availableUpdate != nil },
+                set: { if !$0 { store.availableUpdate = nil } })
+        ) {
+            Button(t("OK")) {}
+                .keyboardShortcut(.defaultAction)
+            Button(t("Go to GitHub")) {
+                if let page = GitHubReleases.page { NSWorkspace.shared.open(page) }
+            }
+        } message: {
+            Text(
+                String(
+                    localized: "Version \(store.availableUpdate ?? "") is available, you have \(Version.current).",
+                    bundle: .module))
+        }
         .task { await store.reload() }
+        .task { await store.checkForUpdate() }
         .onReceive(
             NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)
         ) { _ in

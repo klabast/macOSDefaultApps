@@ -78,6 +78,7 @@ scripts/package-app.sh            # app: build/macOSDefaultApps.app
 
 ## Notes
 
+- The app checks GitHub for a newer release at launch and tells you. It installs nothing; `brew upgrade` or the release page does that.
 - Changing the default browser triggers a macOS consent dialog. It can't be silenced.
 - There is no API to remove an association, only to point it somewhere else. LaunchServices clears out stale ones.
 - The extension `ts` is MPEG-2 Transport Stream system-wide, not TypeScript.

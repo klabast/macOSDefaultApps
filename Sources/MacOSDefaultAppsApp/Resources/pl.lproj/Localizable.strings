@@ -44,3 +44,6 @@
 "other schemes" = "Inne schematy";
 "Initial State" = "Stan początkowy";
 "Restore Initial State…" = "Przywróć stan początkowy…";
+"Update available" = "Dostępna aktualizacja";
+"Go to GitHub" = "Przejdź do GitHub";
+"Version %@ is available, you have %@." = "Dostępna jest wersja %@, masz %@.";
