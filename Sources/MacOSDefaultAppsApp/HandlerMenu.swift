@@ -93,7 +93,7 @@ struct HandlerMenu: View {
 
     private func choose(_ app: AppInfo) {
         open = false
-        store.setDefault(app.bundleID, for: entry.target)
+        Task { await store.setDefault(app.bundleID, for: entry.target) }
     }
 
     private func chooseOther() {
@@ -108,7 +108,7 @@ struct HandlerMenu: View {
                 localized: "'\(url.lastPathComponent)' has no bundle identifier", bundle: .module)
             return
         }
-        store.setDefault(bundleID, for: entry.target)
+        Task { await store.setDefault(bundleID, for: entry.target) }
     }
 }
 

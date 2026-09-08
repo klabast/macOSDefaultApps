@@ -59,11 +59,35 @@ public struct Snapshot: Equatable, Sendable, Codable {
         return lines.joined(separator: "\n") + "\n"
     }
 
+    /// Only the families `catalog` declares — the curated ones, when the
+    /// snapshot was built from a catalog extended by discovery.
+    public func restricted(to catalog: Catalog) -> Snapshot {
+        let families = Set(catalog.families.map(\.name))
+        return Snapshot(entries: entries.filter { families.contains($0.family) })
+    }
+
     public func entries(handledBy bundleID: String) -> [SnapshotEntry] {
         entries.filter { entry in
             entry.result.defaultApp?.bundleID == bundleID
                 || entry.result.candidates.contains { $0.bundleID == bundleID }
         }
+    }
+}
+
+public struct FamilyGroup: Equatable, Sendable {
+    public let name: String
+    public let entries: [SnapshotEntry]
+}
+
+extension Array where Element == SnapshotEntry {
+    public func groupedByFamily() -> [FamilyGroup] {
+        var order: [String] = []
+        var byName: [String: [SnapshotEntry]] = [:]
+        for entry in self {
+            if byName[entry.family] == nil { order.append(entry.family) }
+            byName[entry.family, default: []].append(entry)
+        }
+        return order.map { FamilyGroup(name: $0, entries: byName[$0] ?? []) }
     }
 }
 

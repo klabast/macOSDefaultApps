@@ -29,18 +29,16 @@ func familySymbol(_ name: String) -> String {
     }
 }
 
+private let schemeDescriptions: [String: String] = [
+    "http": t("Web"), "https": t("Web"), "mailto": t("Email"),
+    "ftp": t("File transfer"), "ssh": t("Remote shell"),
+    "tel": t("Phone calls"), "webcal": t("Calendar subscriptions"),
+]
+
 func typeDescription(for target: QueryTarget) -> String? {
     switch target {
-    case .fileExtension(let ext):
-        return UTType(filenameExtension: ext)?.localizedDescription
-    case .contentType(let uti):
-        return UTType(uti)?.localizedDescription
-    case .scheme(let scheme):
-        let known: [String: String] = [
-            "http": t("Web"), "https": t("Web"), "mailto": t("Email"),
-            "ftp": t("File transfer"), "ssh": t("Remote shell"),
-            "tel": t("Phone calls"), "webcal": t("Calendar subscriptions"),
-        ]
-        return known[scheme]
+    case .fileExtension(let ext): UTType(filenameExtension: ext)?.localizedDescription
+    case .contentType(let uti): UTType(uti)?.localizedDescription
+    case .scheme(let scheme): schemeDescriptions[scheme]
     }
 }

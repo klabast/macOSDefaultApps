@@ -25,17 +25,14 @@ public struct SetService: Sendable {
         guard let app = registry.application(withBundleID: bundleID) else {
             throw SetError.unknownApplication(bundleID)
         }
-        switch target {
-        case .fileExtension(let ext):
-            guard let uti = registry.typeIdentifier(forExtension: ext) else {
-                throw QueryError.unknownExtension(ext)
-            }
-            try await writer.setDefaultApplication(app, forType: uti)
-        case .contentType(let uti):
-            try await writer.setDefaultApplication(app, forType: uti)
-        case .scheme(let scheme):
-            try await writer.setDefaultApplication(app, forScheme: scheme)
-        }
+        try await setDefault(app, for: target)
         return app
+    }
+
+    public func setDefault(_ app: AppInfo, for target: QueryTarget) async throws {
+        switch try registry.resolve(target) {
+        case .type(let uti): try await writer.setDefaultApplication(app, forType: uti)
+        case .scheme(let scheme): try await writer.setDefaultApplication(app, forScheme: scheme)
+        }
     }
 }

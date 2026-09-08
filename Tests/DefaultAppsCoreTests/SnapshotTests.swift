@@ -1,4 +1,5 @@
 import Testing
+import DefaultAppsTestSupport
 @testable import DefaultAppsCore
 
 @Suite("snapshot")
@@ -58,6 +59,32 @@ struct SnapshotTests {
     func byApp() {
         #expect(snapshot.entries(handledBy: "com.apple.mail").map(\.target) == [.scheme("mailto")])
         #expect(snapshot.entries(handledBy: "com.not.there").isEmpty)
+    }
+
+    @Test("grouping by family keeps first-appearance order within and across groups")
+    func groupedByFamily() {
+        let entries = [
+            SnapshotEntry(family: "b", target: .fileExtension("1"), result: QueryResult(defaultApp: nil, candidates: [])),
+            SnapshotEntry(family: "a", target: .fileExtension("2"), result: QueryResult(defaultApp: nil, candidates: [])),
+            SnapshotEntry(family: "b", target: .fileExtension("3"), result: QueryResult(defaultApp: nil, candidates: [])),
+        ]
+
+        let groups = entries.groupedByFamily()
+
+        #expect(groups.map(\.name) == ["b", "a"])
+        #expect(groups.map { $0.entries.map(\.target) } == [[.fileExtension("1"), .fileExtension("3")], [.fileExtension("2")]])
+        #expect([SnapshotEntry]().groupedByFamily().isEmpty)
+    }
+
+    @Test("restricting to a catalog drops the families it does not declare")
+    func restricted() {
+        let extended = SnapshotService(registry: registry).build(
+            from: catalog.extended(with: DiscoveredTypes(extensions: ["ipynb"], schemes: ["smb"])))
+
+        let curated = extended.restricted(to: catalog)
+
+        #expect(curated == snapshot)
+        #expect(extended.entries.count == snapshot.entries.count + 2)
     }
 
     @Test("unresolvable extension yields an empty entry, not a missing row")

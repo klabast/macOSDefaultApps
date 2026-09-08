@@ -25,10 +25,13 @@ final class AppStore {
     }
 
     private(set) var snapshot = Snapshot(entries: [])
+    private var curated = Catalog(families: [])
     var filter = ""
     var errorMessage: String?
     var selection: SidebarItem? = .allTypes
     private(set) var busy: Set<String> = []
+    private(set) var loading = false
+    private var reloadGeneration = 0
 
     var mode: Mode = .byType {
         didSet {
@@ -42,7 +45,6 @@ final class AppStore {
 
     struct Preview {
         let title: String
-        let spec: ApplySpec
         let plan: [PlannedChange]
         var results: [AppliedChange]?
     }
@@ -54,11 +56,24 @@ final class AppStore {
     var savePresetSheet = false
     var presetName = ""
 
-    private let registry = LaunchServicesRegistry()
-    private let discovery = InstalledAppScanner()
-    private let presets = PresetStore.standard
+    private let registry: any HandlerRegistry
+    private let discovery: any TypeDiscovery
+    private let writer: any HandlerWriter
+    private let presets: PresetStore
+    private let restorePoint: RestorePoint
 
-    private var restorePoint: RestorePoint { RestorePoint.standard(registry: registry) }
+    init(
+        registry: any HandlerRegistry = LaunchServicesRegistry(),
+        discovery: any TypeDiscovery = InstalledAppScanner(),
+        writer: any HandlerWriter = LaunchServicesWriter(),
+        locations: Locations = .standard
+    ) {
+        self.registry = registry
+        self.discovery = discovery
+        self.writer = writer
+        presets = PresetStore(directory: locations.presets)
+        restorePoint = RestorePoint(directory: locations.state, registry: registry)
+    }
 
     var visible: Snapshot { snapshot.filtered(filter) }
 
@@ -75,14 +90,34 @@ final class AppStore {
         return snapshot.apps().first { $0.bundleID == bundleID }
     }
 
-    func reload() {
+    func reload() async {
+        reloadGeneration += 1
+        let generation = reloadGeneration
+        loading = true
+        let registry = registry
+        let discovery = discovery
+        let built = await Task.detached {
+            Result {
+                let curated = try Catalog.bundled()
+                let snapshot = SnapshotService(registry: registry)
+                    .build(from: curated.extended(with: discovery.discover()))
+                return (curated, snapshot)
+            }
+        }.value
+        // reloads overlap (launch + activation, or a change during one);
+        // an older scan landing after a newer one would show stale rows
+        guard generation == reloadGeneration else { return }
+        loading = false
         do {
-            let catalog = try Catalog.bundled().extended(with: discovery.discover())
-            snapshot = SnapshotService(registry: registry).build(from: catalog)
+            (curated, snapshot) = try built.get()
             try restorePoint.captureIfMissing(from: snapshot)
         } catch {
             errorMessage = String(describing: error)
         }
+        refreshPresets()
+    }
+
+    private func refreshPresets() {
         presetNames = presets.list()
         hasRestorePoint = restorePoint.exists
         storeIsVersioned = presets.isVersioned
@@ -107,48 +142,45 @@ final class AppStore {
     func beginPreview(text: String, title: String) {
         do {
             let spec = try ApplySpec.parse(text)
-            let plan = ApplyService(registry: registry, writer: LaunchServicesWriter()).plan(spec)
-            preview = Preview(title: title, spec: spec, plan: plan, results: nil)
+            let plan = ApplyService(registry: registry, writer: writer).plan(spec)
+            preview = Preview(title: title, plan: plan, results: nil)
         } catch {
             errorMessage = String(describing: error)
         }
     }
 
-    func confirmApply() {
-        guard let spec = preview?.spec else { return }
-        Task {
-            let results = await ApplyService(registry: registry, writer: LaunchServicesWriter())
-                .apply(spec)
-            preview?.results = results
-            reload()
-        }
+    func confirmApply() async {
+        guard let plan = preview?.plan else { return }
+        let results = await ApplyService(registry: registry, writer: writer).apply(plan)
+        preview?.results = results
+        await reload()
+    }
+
+    /// Presets carry the curated catalog only, same as `mda save`. The
+    /// discovered long tail is machine state and stays in the restore point.
+    var presetText: String {
+        snapshot.restricted(to: curated).settingsFileText()
     }
 
     func savePreset() {
         do {
-            try presets.save(presetName, text: snapshot.settingsFileText())
+            try presets.save(presetName, text: presetText)
             savePresetSheet = false
-            reload()
+            refreshPresets()
         } catch {
             errorMessage = String(describing: error)
         }
     }
 
-    func exportText() -> String {
-        snapshot.settingsFileText()
-    }
-
-    func setDefault(_ bundleID: String, for target: QueryTarget) {
+    func setDefault(_ bundleID: String, for target: QueryTarget) async {
         busy.insert(target.displayString)
-        Task {
-            do {
-                _ = try await SetService(registry: registry, writer: LaunchServicesWriter())
-                    .setDefault(bundleID: bundleID, for: target)
-            } catch {
-                errorMessage = String(describing: error)
-            }
-            reload()
-            busy.remove(target.displayString)
+        do {
+            _ = try await SetService(registry: registry, writer: writer)
+                .setDefault(bundleID: bundleID, for: target)
+        } catch {
+            errorMessage = String(describing: error)
         }
+        await reload()
+        busy.remove(target.displayString)
     }
 }

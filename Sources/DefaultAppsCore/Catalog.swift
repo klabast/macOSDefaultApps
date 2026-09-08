@@ -1,9 +1,7 @@
 import Foundation
 
-/// Curated list of type families shown by `mda dump` and the UI.
-/// Data rather than code: `Resources/catalog.json`, easy to extend.
-/// This is the curated front page, not the full set — `TypeDiscovery`
-/// finds the rest and `extended(with:)` appends it.
+/// The curated type families (`Resources/catalog.json`) — the front page,
+/// not the full set; `extended(with:)` appends what `TypeDiscovery` finds.
 public struct Catalog: Equatable, Sendable, Decodable {
     public let families: [TypeFamily]
 

@@ -35,7 +35,8 @@ public struct ApplySpec: Equatable, Sendable {
 
     public static func parse(_ text: String) throws -> ApplySpec {
         var lines: [ApplyLine] = []
-        for (index, rawLine) in text.split(separator: "\n", omittingEmptySubsequences: false).enumerated() {
+        let rawLines = text.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline)
+        for (index, rawLine) in rawLines.enumerated() {
             let content = rawLine.prefix(while: { $0 != "#" }).trimmingCharacters(in: .whitespaces)
             guard !content.isEmpty else { continue }
             let fields = content.split(whereSeparator: \.isWhitespace).map(String.init)
@@ -44,7 +45,7 @@ public struct ApplySpec: Equatable, Sendable {
             let target: QueryTarget?
             switch fields.count {
             case 2 where !fields[1].contains(".") && !fields[1].contains(":"):
-                target = .scheme(fields[1].lowercased())  // duti: two bare fields = scheme
+                target = .scheme(fields[1].lowercased())
             case 2:
                 target = QueryTarget.parse(fields[1])
             case 3 where dutiRoles.contains(fields[2].lowercased()):
