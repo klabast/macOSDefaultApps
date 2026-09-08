@@ -71,6 +71,32 @@ struct AppStoreTests {
             locations: locations)
     }
 
+    @Test("reading the filtered snapshot repeatedly costs one pass, not one per read")
+    func visibleIsCached() async {
+        var registry = FakeRegistry()
+        var extensions: Set<String> = []
+        for i in 0..<3000 {
+            registry.typesByExtension["e\(i)"] = "dyn.e\(i)"
+            registry.defaultByType["dyn.e\(i)"] = xcode
+            registry.appsByType["dyn.e\(i)"] = [xcode, textEdit]
+            extensions.insert("e\(i)")
+        }
+        let store = makeStore(registry: registry, discovery: FakeDiscovery(extensions: extensions))
+        await store.reload()
+        store.filter = "e1"
+
+        let clock = ContinuousClock()
+        let onePass = (0..<3).map { _ in
+            clock.measure { _ = store.snapshot.filtered("e1").apps() }
+        }.min() ?? .zero
+        let fiftyReads = clock.measure {
+            for _ in 0..<50 { _ = store.visible.entries.count + store.visibleApps.count }
+        }
+
+        #expect(store.visible.entries.count > 1000)
+        #expect(fiftyReads < onePass * 5, "50 reads \(fiftyReads) vs one pass \(onePass)")
+    }
+
     @Test("a newer release is offered, a failed check stays quiet")
     func updateCheck() async {
         let store = makeStore(registry: registry, releases: FakeReleaseFeed(tag: "v9.9.9"))

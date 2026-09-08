@@ -24,9 +24,19 @@ final class AppStore {
         }
     }
 
-    private(set) var snapshot = Snapshot(entries: [])
+    private(set) var snapshot = Snapshot(entries: []) {
+        didSet {
+            apps = snapshot.apps()
+            refilter()
+        }
+    }
     private var curated = Catalog(families: [])
-    var filter = ""
+    var filter = "" {
+        didSet { refilter() }
+    }
+    private(set) var visible = Snapshot(entries: [])
+    private(set) var visibleApps: [AppInfo] = []
+    private(set) var apps: [AppInfo] = []
     var errorMessage: String?
     var selection: SidebarItem? = .allTypes
     private(set) var busy: Set<String> = []
@@ -36,10 +46,7 @@ final class AppStore {
     var mode: Mode = .byType {
         didSet {
             guard mode != oldValue else { return }
-            selection =
-                mode == .byType
-                ? .allTypes
-                : snapshot.apps().first.map { .app($0.bundleID) }
+            selection = mode == .byType ? .allTypes : apps.first.map { .app($0.bundleID) }
         }
     }
 
@@ -86,7 +93,11 @@ final class AppStore {
         availableUpdate = try? await UpdateCheck(feed: releases).newerVersion()
     }
 
-    var visible: Snapshot { snapshot.filtered(filter) }
+    // views read these several times per render; one pass per change instead
+    private func refilter() {
+        visible = snapshot.filtered(filter)
+        visibleApps = visible.apps()
+    }
 
     var detailEntries: [SnapshotEntry] {
         switch selection {
@@ -98,7 +109,7 @@ final class AppStore {
 
     var selectedApp: AppInfo? {
         guard case .app(let bundleID) = selection else { return nil }
-        return snapshot.apps().first { $0.bundleID == bundleID }
+        return apps.first { $0.bundleID == bundleID }
     }
 
     func reload() async {
