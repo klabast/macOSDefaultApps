@@ -70,3 +70,27 @@ jobs:
           gh release create "$GITHUB_REF_NAME" --generate-notes \
             "build/macOSDefaultApps-${GITHUB_REF_NAME#v}.zip" \
             "build/mda-${GITHUB_REF_NAME#v}-universal.tar.gz"
+
+  tap:
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: bump the tap
+        env:
+          TAP_TOKEN: ${{ secrets.TAP_TOKEN }}
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          git clone \
+            "https://x-access-token:${TAP_TOKEN}@github.com/klabast/homebrew-tap.git" tap
+          scripts/bump-tap.sh "$version" tap
+          cd tap
+          if git diff --quiet; then
+            echo "tap already at $version"
+            exit 0
+          fi
+          git config user.name klabast
+          git config user.email 74070528+klabast@users.noreply.github.com
+          git commit -am "mda + cask $version"
+          git push
