@@ -25,6 +25,7 @@ final class AppStore {
     }
 
     private(set) var snapshot = Snapshot(entries: [])
+    private var curated = Catalog(families: [])
     var filter = ""
     var errorMessage: String?
     var selection: SidebarItem? = .allTypes
@@ -89,8 +90,9 @@ final class AppStore {
 
     func reload() {
         do {
-            let catalog = try Catalog.bundled().extended(with: discovery.discover())
-            snapshot = SnapshotService(registry: registry).build(from: catalog)
+            curated = try Catalog.bundled()
+            snapshot = SnapshotService(registry: registry)
+                .build(from: curated.extended(with: discovery.discover()))
             try restorePoint.captureIfMissing(from: snapshot)
         } catch {
             errorMessage = String(describing: error)
@@ -133,18 +135,20 @@ final class AppStore {
         reload()
     }
 
+    /// Presets carry the curated catalog only, same as `mda save`. The
+    /// discovered long tail is machine state and stays in the restore point.
+    var presetText: String {
+        snapshot.restricted(to: curated).settingsFileText()
+    }
+
     func savePreset() {
         do {
-            try presets.save(presetName, text: snapshot.settingsFileText())
+            try presets.save(presetName, text: presetText)
             savePresetSheet = false
             reload()
         } catch {
             errorMessage = String(describing: error)
         }
-    }
-
-    func exportText() -> String {
-        snapshot.settingsFileText()
     }
 
     func setDefault(_ bundleID: String, for target: QueryTarget) async {

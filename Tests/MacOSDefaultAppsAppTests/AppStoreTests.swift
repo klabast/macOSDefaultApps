@@ -79,6 +79,20 @@ struct AppStoreTests {
         #expect(store.selectedApp == textEdit)
     }
 
+    @Test("saving a preset writes the curated catalog only, like mda save")
+    func savesCurated() throws {
+        let store = makeStore(registry: registry)
+        store.reload()
+        store.presetName = "work"
+
+        store.savePreset()
+
+        let saved = try PresetStore(directory: locations.presets).read("work")
+        #expect(try ApplySpec.parse(saved).lines.map(\.target) == [.fileExtension("md")])
+        #expect(store.savePresetSheet == false)
+        #expect(store.presetNames == ["work"])
+    }
+
     @Test("a preset preview plans against the current defaults")
     func preview() throws {
         let store = makeStore(registry: registry)

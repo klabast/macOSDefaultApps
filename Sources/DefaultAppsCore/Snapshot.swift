@@ -59,6 +59,13 @@ public struct Snapshot: Equatable, Sendable, Codable {
         return lines.joined(separator: "\n") + "\n"
     }
 
+    /// Only the families `catalog` declares — the curated ones, when the
+    /// snapshot was built from a catalog extended by discovery.
+    public func restricted(to catalog: Catalog) -> Snapshot {
+        let families = Set(catalog.families.map(\.name))
+        return Snapshot(entries: entries.filter { families.contains($0.family) })
+    }
+
     public func entries(handledBy bundleID: String) -> [SnapshotEntry] {
         entries.filter { entry in
             entry.result.defaultApp?.bundleID == bundleID

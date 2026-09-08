@@ -49,7 +49,7 @@ struct PresetsMenu: View {
         panel.nameFieldStringValue = "defaults.mda"
         guard panel.runModal() == .OK, let url = panel.url else { return }
         do {
-            try store.exportText().write(to: url, atomically: true, encoding: .utf8)
+            try store.presetText.write(to: url, atomically: true, encoding: .utf8)
         } catch {
             store.errorMessage = String(describing: error)
         }

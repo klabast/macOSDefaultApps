@@ -61,6 +61,17 @@ struct SnapshotTests {
         #expect(snapshot.entries(handledBy: "com.not.there").isEmpty)
     }
 
+    @Test("restricting to a catalog drops the families it does not declare")
+    func restricted() {
+        let extended = SnapshotService(registry: registry).build(
+            from: catalog.extended(with: DiscoveredTypes(extensions: ["ipynb"], schemes: ["smb"])))
+
+        let curated = extended.restricted(to: catalog)
+
+        #expect(curated == snapshot)
+        #expect(extended.entries.count == snapshot.entries.count + 2)
+    }
+
     @Test("unresolvable extension yields an empty entry, not a missing row")
     func unresolvable() {
         let catalog = Catalog(families: [
