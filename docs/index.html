@@ -115,7 +115,7 @@
 <header>
   <img src="icon.png" alt="">
   <h1>macOSDefaultApps</h1>
-  <p class="tagline">View and set default apps on macOS — which app opens which file extension, UTI or URL scheme. A modern successor to RCDefaultApp, SwiftDefaultApps and duti.</p>
+  <p class="tagline">View and set default apps on macOS — which app opens which file extension, UTI or URL scheme.</p>
   <p class="buttons">
     <a class="primary" href="https://github.com/klabast/macOSDefaultApps/releases/latest">Download</a>
     <a class="secondary" href="https://github.com/klabast/macOSDefaultApps">GitHub</a>
@@ -133,13 +133,15 @@
 <span class="line"><span class="cmd"><span class="bin">brew</span> install --cask macosdefaultapps</span>    <span class="cmt"># app</span></span></code></pre>
 </div>
 
-<h2>Why</h2>
+<h2>Lineage</h2>
+<p>A modern successor to <a href="https://www.rubicode.com/Software/RCDefaultApp/">RCDefaultApp</a>, <a href="https://github.com/Lord-Kamina/SwiftDefaultApps">SwiftDefaultApps</a> and <a href="https://github.com/moretension/duti">duti</a> that allows you to set the default app on modern macOS.</p>
+
+<h2>What it does</h2>
 <ul>
-  <li>Built for current macOS: a standalone app and a CLI, no preference pane.</li>
   <li>App <em>and</em> CLI over the same core — point and click, or script it.</li>
-  <li>duti-compatible: <code>mda apply</code> reads your existing duti settings files unchanged.</li>
-  <li>Covers every type and URL scheme your installed apps declare — ~1300 extensions and ~185 schemes on a typical Mac, not a fixed list.</li>
-  <li>Localized for English, Deutsch, Français, Español, Italiano, Português, Nederlands, Polski, 简体中文.</li>
+  <li>Covers every type and URL scheme your installed apps declare.</li>
+  <li>Reads and writes duti-syntax settings files, so what you already have keeps working.</li>
+  <li>English, Deutsch, Français, Español, Italiano, Português, Nederlands, Polski, 简体中文.</li>
 </ul>
 
 <h2>CLI</h2>
