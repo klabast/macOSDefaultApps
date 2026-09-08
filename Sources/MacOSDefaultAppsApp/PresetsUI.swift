@@ -19,6 +19,11 @@ struct PresetsMenu: View {
                 store.presetName = ""
                 store.savePresetSheet = true
             }
+            if store.hasRestorePoint {
+                Divider()
+                Button(t("Restore Initial State…")) { store.beginPreviewRestorePoint() }
+            }
+            Divider()
             Button(t("Import File…")) { importFile() }
             Button(t("Export…")) { exportFile() }
         } label: {

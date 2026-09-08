@@ -69,6 +69,7 @@ struct Set: AsyncParsableCommand {
     @OptionGroup var target: TargetArgument
 
     func run() async throws {
+        recordRestorePoint()
         let service = SetService(registry: LaunchServicesRegistry(), writer: LaunchServicesWriter())
         let app = try await service.setDefault(bundleID: bundleID, for: target.parsed())
         print("\(target.target) -> \(line(for: app))")
@@ -111,7 +112,7 @@ struct Apply: AsyncParsableCommand {
         abstract: "Apply a preset or settings file (duti-compatible). Applies what it can, reports the rest."
     )
 
-    @Argument(help: "Preset name, path to a settings file, or '-' for stdin. Default: preset 'default'.")
+    @Argument(help: "Preset name, 'initial' for the restore point, a settings file path, or '-' for stdin. Default: preset 'default'.")
     var source: String?
 
     func run() async throws {
@@ -122,6 +123,8 @@ struct Apply: AsyncParsableCommand {
             text = try store.read("default")
         case "-":
             text = String(decoding: FileHandle.standardInput.readDataToEndOfFile(), as: UTF8.self)
+        case RestorePoint.name:
+            text = try RestorePoint.standard(registry: LaunchServicesRegistry()).text()
         case let path? where path.contains("/") || FileManager.default.fileExists(atPath: path):
             text = try String(contentsOfFile: path, encoding: .utf8)
         case let name?:
@@ -129,6 +132,7 @@ struct Apply: AsyncParsableCommand {
         }
 
         let spec = try ApplySpec.parse(text)
+        recordRestorePoint()
         let results = await ApplyService(
             registry: LaunchServicesRegistry(), writer: LaunchServicesWriter()
         ).apply(spec)
@@ -176,6 +180,7 @@ struct Save: ParsableCommand {
     var name: String = "default"
 
     func run() throws {
+        recordRestorePoint()
         let store = PresetStore.standard
         let snapshot = SnapshotService(registry: LaunchServicesRegistry())
             .build(from: try Catalog.bundled())
@@ -186,6 +191,23 @@ struct Save: ParsableCommand {
                 "warning: \(store.directory.path) is not inside a git repository — saves overwrite without history. consider: git init \(store.directory.path)\n",
                 stderr)
         }
+    }
+}
+
+/// Writes the pre-mda state to the 'initial' preset on the first run that is
+/// about to change something. A failure here warns but does not block the
+/// command the user actually asked for.
+private func recordRestorePoint() {
+    let restore = RestorePoint.standard(registry: LaunchServicesRegistry())
+    do {
+        let captured = try restore.captureIfMissing {
+            try Catalog.bundled().extended(with: InstalledAppScanner().discover())
+        }
+        if captured {
+            fputs("recorded \(restore.url.path) — 'mda apply initial' puts things back\n", stderr)
+        }
+    } catch {
+        fputs("warning: could not record the restore point — \(error)\n", stderr)
     }
 }
 

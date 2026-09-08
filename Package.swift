@@ -28,5 +28,6 @@ let package = Package(
             resources: [.process("Resources")]
         ),
         .testTarget(name: "DefaultAppsCoreTests", dependencies: ["DefaultAppsCore"]),
+        .testTarget(name: "MDATests", dependencies: ["mda"]),
     ]
 )

@@ -32,6 +32,16 @@ struct PresetStoreTests {
         }
     }
 
+    @Test("the restore point cannot be overwritten through save")
+    func reservedName() throws {
+        let store = makeStore()
+
+        #expect(throws: PresetError.reserved("initial")) {
+            try store.save("initial", text: "x")
+        }
+        #expect(store.list().contains("initial") == false)
+    }
+
     @Test("reading a missing preset names it")
     func missing() {
         #expect(throws: PresetError.notFound("nope")) {

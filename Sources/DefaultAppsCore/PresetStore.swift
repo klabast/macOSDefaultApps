@@ -3,11 +3,13 @@ import Foundation
 public enum PresetError: Error, Equatable, CustomStringConvertible {
     case invalidName(String)
     case notFound(String)
+    case reserved(String)
 
     public var description: String {
         switch self {
         case .invalidName(let name): "invalid preset name '\(name)'"
         case .notFound(let name): "no preset named '\(name)'"
+        case .reserved(let name): "'\(name)' names the restore point and cannot be used for a preset"
         }
     }
 }
@@ -22,7 +24,7 @@ public struct PresetStore: Sendable {
     }
 
     public static var standard: PresetStore {
-        PresetStore(directory: FileManager.default.homeDirectoryForCurrentUser.appending(path: ".mda"))
+        PresetStore(directory: Locations.standard.presets)
     }
 
     public func url(for name: String) throws -> URL {
@@ -46,6 +48,9 @@ public struct PresetStore: Sendable {
     }
 
     public func save(_ name: String, text: String) throws {
+        guard name != RestorePoint.name else {
+            throw PresetError.reserved(name)
+        }
         let url = try url(for: name)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         try text.write(to: url, atomically: true, encoding: .utf8)
