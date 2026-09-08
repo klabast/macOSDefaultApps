@@ -45,11 +45,15 @@ public struct ApplyService: Sendable {
 
     public func plan(_ spec: ApplySpec) -> [PlannedChange] {
         let query = QueryService(registry: registry)
+        var installed: [String: AppInfo] = [:]
+        for bundleID in Set(spec.lines.map(\.bundleID)) {
+            installed[bundleID] = registry.application(withBundleID: bundleID)
+        }
         return spec.lines.map { line in
-            guard let app = registry.application(withBundleID: line.bundleID) else {
+            guard let app = installed[line.bundleID] else {
                 return PlannedChange(line: line, action: .missingApp)
             }
-            let current = (try? query.query(line.target))?.defaultApp
+            let current = try? query.defaultApplication(for: line.target)
             if current?.bundleID == app.bundleID {
                 return PlannedChange(line: line, action: .unchanged(app))
             }
@@ -58,19 +62,22 @@ public struct ApplyService: Sendable {
     }
 
     public func apply(_ spec: ApplySpec) async -> [AppliedChange] {
+        await apply(plan(spec))
+    }
+
+    public func apply(_ plan: [PlannedChange]) async -> [AppliedChange] {
         let set = SetService(registry: registry, writer: writer)
         var results: [AppliedChange] = []
-        for planned in plan(spec) {
+        for planned in plan {
             let outcome: ApplyOutcome
             switch planned.action {
             case .missingApp:
                 outcome = .skippedMissingApp
             case .unchanged:
                 outcome = .unchanged
-            case .change:
+            case .change(_, let app):
                 do {
-                    _ = try await set.setDefault(
-                        bundleID: planned.line.bundleID, for: planned.line.target)
+                    try await set.setDefault(app, for: planned.line.target)
                     outcome = .applied
                 } catch {
                     outcome = .failed(String(describing: error))

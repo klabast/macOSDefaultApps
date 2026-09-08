@@ -49,6 +49,41 @@ struct ApplyServiceTests {
         #expect(writer.typeCalls.first?.uti == "net.daringfireball.markdown")
     }
 
+    @Test("planning reads defaults only, never candidate lists")
+    func planningSkipsCandidates() throws {
+        let counting = CountingRegistry(registry)
+
+        _ = ApplyService(registry: counting, writer: FakeWriter()).plan(try spec)
+
+        #expect(counting.candidateCalls == 0)
+        #expect(counting.defaultCalls == 2)
+    }
+
+    @Test("planning resolves each bundle id once, however often it appears")
+    func planningResolvesAppsOnce() throws {
+        let counting = CountingRegistry(registry)
+
+        _ = ApplyService(registry: counting, writer: FakeWriter()).plan(try spec)
+
+        #expect(counting.applicationCalls == 2, "sublime twice and one missing app is two lookups")
+    }
+
+    @Test("applying a plan does not redo the plan's lookups")
+    func applyingReusesThePlan() async throws {
+        let counting = CountingRegistry(registry)
+        let writer = FakeWriter()
+        let service = ApplyService(registry: counting, writer: writer)
+        let plan = service.plan(try spec)
+        counting.reset()
+
+        let results = await service.apply(plan)
+
+        #expect(results.map(\.outcome) == [.applied, .unchanged, .skippedMissingApp])
+        #expect(counting.applicationCalls == 0)
+        #expect(counting.defaultCalls == 0)
+        #expect(counting.candidateCalls == 0)
+    }
+
     @Test("a refused write reports failed and the rest still runs")
     func failure() async throws {
         let writer = FakeWriter()

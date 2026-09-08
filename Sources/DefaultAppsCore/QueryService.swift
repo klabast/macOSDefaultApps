@@ -33,26 +33,22 @@ public struct QueryService: Sendable {
     }
 
     public func query(_ target: QueryTarget) throws -> QueryResult {
-        switch target {
-        case .fileExtension(let ext):
-            guard let uti = registry.typeIdentifier(forExtension: ext) else {
-                throw QueryError.unknownExtension(ext)
-            }
-            return queryType(uti)
-        case .contentType(let uti):
-            return queryType(uti)
+        switch try registry.resolve(target) {
+        case .type(let uti):
+            QueryResult(
+                defaultApp: registry.defaultApplication(forType: uti),
+                candidates: registry.applications(forType: uti))
         case .scheme(let scheme):
-            return QueryResult(
+            QueryResult(
                 defaultApp: registry.defaultApplication(forScheme: scheme),
-                candidates: registry.applications(forScheme: scheme)
-            )
+                candidates: registry.applications(forScheme: scheme))
         }
     }
 
-    private func queryType(_ uti: String) -> QueryResult {
-        QueryResult(
-            defaultApp: registry.defaultApplication(forType: uti),
-            candidates: registry.applications(forType: uti)
-        )
+    public func defaultApplication(for target: QueryTarget) throws -> AppInfo? {
+        switch try registry.resolve(target) {
+        case .type(let uti): registry.defaultApplication(forType: uti)
+        case .scheme(let scheme): registry.defaultApplication(forScheme: scheme)
+        }
     }
 }

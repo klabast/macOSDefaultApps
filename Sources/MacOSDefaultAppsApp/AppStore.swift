@@ -42,7 +42,6 @@ final class AppStore {
 
     struct Preview {
         let title: String
-        let spec: ApplySpec
         let plan: [PlannedChange]
         var results: [AppliedChange]?
     }
@@ -108,17 +107,17 @@ final class AppStore {
         do {
             let spec = try ApplySpec.parse(text)
             let plan = ApplyService(registry: registry, writer: LaunchServicesWriter()).plan(spec)
-            preview = Preview(title: title, spec: spec, plan: plan, results: nil)
+            preview = Preview(title: title, plan: plan, results: nil)
         } catch {
             errorMessage = String(describing: error)
         }
     }
 
     func confirmApply() {
-        guard let spec = preview?.spec else { return }
+        guard let plan = preview?.plan else { return }
         Task {
             let results = await ApplyService(registry: registry, writer: LaunchServicesWriter())
-                .apply(spec)
+                .apply(plan)
             preview?.results = results
             reload()
         }
