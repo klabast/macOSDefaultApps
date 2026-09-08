@@ -30,6 +30,7 @@ mda save                            # snapshot handlers to ~/.mda/default
 mda apply                           # restore the default preset
 mda apply work                      # a named preset (~/.mda/work)
 mda apply settings.duti             # any duti settings file
+mda apply initial                   # undo: the state before mda touched this mac
 mda --version
 ```
 
@@ -42,6 +43,16 @@ mda --version
 `mda apply` restores a preset. Apps that aren't installed are skipped and listed, and the exit code is non-zero so a bootstrap script can react. Re-run it after installing them.
 
 The app has the same thing under **Presets**, with a preview before anything is written.
+
+## The restore point
+
+Before mda changes anything for the first time, it records how the machine already looked. Written once, never rewritten.
+
+```sh
+mda apply initial                   # put it all back
+```
+
+It isn't a preset and isn't in `~/.mda` — it lives in `~/Library/Application Support/mda`, because it describes one machine and would be wrong on any other. Keep `~/.mda` in your dotfiles; this stays behind. [ADR 0002](docs/adr/0002-restore-point-is-machine-state-not-a-preset.md).
 
 ## duti settings files
 
