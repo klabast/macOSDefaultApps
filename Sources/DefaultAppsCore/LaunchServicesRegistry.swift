@@ -40,8 +40,12 @@ public struct LaunchServicesRegistry: HandlerRegistry {
         URL(string: "\(scheme)://")
     }
 
-    private func appInfo(at url: URL) -> AppInfo? {
+    /// Named as Finder names it: the localized display name when the app
+    /// ships one ("Find My", "Vorschau"), otherwise the file name.
+    func appInfo(at url: URL) -> AppInfo? {
         guard let bundle = Bundle(url: url), let id = bundle.bundleIdentifier else { return nil }
-        return AppInfo(bundleID: id, name: url.deletingPathExtension().lastPathComponent, url: url)
+        let name = bundle.localizedInfoDictionary?["CFBundleDisplayName"] as? String
+            ?? url.deletingPathExtension().lastPathComponent
+        return AppInfo(bundleID: id, name: name, url: url)
     }
 }
