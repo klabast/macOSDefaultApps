@@ -30,6 +30,8 @@ final class AppStore {
     var errorMessage: String?
     var selection: SidebarItem? = .allTypes
     private(set) var busy: Set<String> = []
+    private(set) var loading = false
+    private var reloadGeneration = 0
 
     var mode: Mode = .byType {
         didSet {
@@ -88,15 +90,34 @@ final class AppStore {
         return snapshot.apps().first { $0.bundleID == bundleID }
     }
 
-    func reload() {
+    func reload() async {
+        reloadGeneration += 1
+        let generation = reloadGeneration
+        loading = true
+        let registry = registry
+        let discovery = discovery
+        let built = await Task.detached {
+            Result {
+                let curated = try Catalog.bundled()
+                let snapshot = SnapshotService(registry: registry)
+                    .build(from: curated.extended(with: discovery.discover()))
+                return (curated, snapshot)
+            }
+        }.value
+        // reloads overlap (launch + activation, or a change during one);
+        // an older scan landing after a newer one would show stale rows
+        guard generation == reloadGeneration else { return }
+        loading = false
         do {
-            curated = try Catalog.bundled()
-            snapshot = SnapshotService(registry: registry)
-                .build(from: curated.extended(with: discovery.discover()))
+            (curated, snapshot) = try built.get()
             try restorePoint.captureIfMissing(from: snapshot)
         } catch {
             errorMessage = String(describing: error)
         }
+        refreshPresets()
+    }
+
+    private func refreshPresets() {
         presetNames = presets.list()
         hasRestorePoint = restorePoint.exists
         storeIsVersioned = presets.isVersioned
@@ -132,7 +153,7 @@ final class AppStore {
         guard let plan = preview?.plan else { return }
         let results = await ApplyService(registry: registry, writer: writer).apply(plan)
         preview?.results = results
-        reload()
+        await reload()
     }
 
     /// Presets carry the curated catalog only, same as `mda save`. The
@@ -145,7 +166,7 @@ final class AppStore {
         do {
             try presets.save(presetName, text: presetText)
             savePresetSheet = false
-            reload()
+            refreshPresets()
         } catch {
             errorMessage = String(describing: error)
         }
@@ -159,7 +180,7 @@ final class AppStore {
         } catch {
             errorMessage = String(describing: error)
         }
-        reload()
+        await reload()
         busy.remove(target.displayString)
     }
 }

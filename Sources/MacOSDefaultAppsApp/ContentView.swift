@@ -35,18 +35,18 @@ struct ContentView: View {
         .sheet(isPresented: Binding(get: { store.savePresetSheet }, set: { store.savePresetSheet = $0 })) {
             SavePresetSheet(store: store)
         }
-        .task { store.reload() }
+        .task { await store.reload() }
         .onReceive(
             NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)
         ) { _ in
-            store.reload()
+            Task { await store.reload() }
         }
         .frame(minWidth: 720, minHeight: 460)
         .onReceive(NotificationCenter.default.publisher(for: .focusFilter)) { _ in
             focusFilterField()
         }
         .onReceive(NotificationCenter.default.publisher(for: .reloadSnapshot)) { _ in
-            store.reload()
+            Task { await store.reload() }
         }
         .onReceive(NotificationCenter.default.publisher(for: .switchByType)) { _ in
             store.mode = .byType
@@ -98,14 +98,18 @@ struct DetailView: View {
 
     var body: some View {
         Group {
-            switch store.mode {
-            case .byType:
-                TypeEntriesList(store: store)
-            case .byApp:
-                if let app = store.selectedApp {
-                    AppEntriesList(store: store, app: app)
-                } else {
-                    ContentUnavailableView(t("Select an app"), systemImage: "app.dashed")
+            if store.loading, store.snapshot.entries.isEmpty {
+                ProgressView()
+            } else {
+                switch store.mode {
+                case .byType:
+                    TypeEntriesList(store: store)
+                case .byApp:
+                    if let app = store.selectedApp {
+                        AppEntriesList(store: store, app: app)
+                    } else {
+                        ContentUnavailableView(t("Select an app"), systemImage: "app.dashed")
+                    }
                 }
             }
         }
@@ -118,7 +122,7 @@ struct DetailView: View {
                 FilterField(store: store)
             }
             ToolbarItem {
-                Button(t("Reload"), systemImage: "arrow.clockwise") { store.reload() }
+                Button(t("Reload"), systemImage: "arrow.clockwise") { Task { await store.reload() } }
             }
         }
         .safeAreaInset(edge: .bottom) { StatusBar(store: store) }
