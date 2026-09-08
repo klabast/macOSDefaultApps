@@ -10,7 +10,7 @@ struct ContentView: View {
         // strand the detail view without context — keep it locked open.
         NavigationSplitView(columnVisibility: .constant(.all)) {
             SidebarView(store: store)
-                .navigationSplitViewColumnWidth(min: 190, ideal: 230)
+                .navigationSplitViewColumnWidth(min: 220, ideal: 280)
                 .toolbar(removing: .sidebarToggle)
         } detail: {
             DetailView(store: store)

@@ -49,19 +49,13 @@ struct TypeEntriesList: View {
     let store: AppStore
 
     var body: some View {
-        List {
-            if case .family = store.selection {
-                ForEach(store.detailEntries, id: \.target.displayString) { entry in
-                    TypeRow(store: store, entry: entry)
-                }
-            } else {
-                ForEach(store.detailEntries.groupedByFamily(), id: \.name) { group in
-                    Section(tKey(group.name)) {
-                        ForEach(group.entries, id: \.target.displayString) { entry in
-                            TypeRow(store: store, entry: entry)
-                        }
-                    }
-                }
+        if case .family(let name) = store.selection {
+            EntryList(groups: [FamilyGroup(name: name, entries: store.detailEntries)], headers: false) {
+                TypeRow(store: store, entry: $0)
+            }
+        } else {
+            EntryList(groups: store.detailEntries.groupedByFamily()) {
+                TypeRow(store: store, entry: $0)
             }
         }
     }
@@ -72,10 +66,8 @@ struct AppEntriesList: View {
     let app: AppInfo
 
     var body: some View {
-        List {
-            ForEach(store.detailEntries, id: \.target.displayString) { entry in
-                AppEntryRow(store: store, app: app, entry: entry)
-            }
+        EntryList(groups: [FamilyGroup(name: app.bundleID, entries: store.detailEntries)], headers: false) {
+            AppEntryRow(store: store, app: app, entry: $0)
         }
     }
 }
@@ -88,7 +80,7 @@ struct StatusBar: View {
             Text(
                 String(
                     localized:
-                        "\(store.visible.entries.count) of \(store.snapshot.entries.count) types · \(store.snapshot.apps().count) apps",
+                        "\(store.visible.entries.count) of \(store.snapshot.entries.count) types · \(store.apps.count) apps",
                     bundle: .module))
                 .font(.callout)
                 .foregroundStyle(.secondary)

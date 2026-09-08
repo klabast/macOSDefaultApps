@@ -24,7 +24,7 @@ struct SidebarView: View {
                             .tag(SidebarItem.family(group.name))
                     }
                 case .byApp:
-                    ForEach(store.visible.apps(), id: \.bundleID) { app in
+                    ForEach(store.visibleApps, id: \.bundleID) { app in
                         HStack(spacing: 8) {
                             AppIcon(url: app.url, size: 18)
                             Text(app.name)

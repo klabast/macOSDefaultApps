@@ -30,6 +30,36 @@ struct LaunchServicesRegistryTests {
         #expect(registry.defaultApplication(forScheme: "https") != nil)
     }
 
+    /// Writes a throwaway .app with a localized display name, as Finder reads it.
+    private func fixture(displayName: String?) throws -> URL {
+        let root = URL(filePath: NSTemporaryDirectory()).appending(path: "mda-name-\(UUID().uuidString)")
+        let app = root.appending(path: "FindMy.app")
+        let resources = app.appending(path: "Contents/Resources/en.lproj")
+        try FileManager.default.createDirectory(at: resources, withIntermediateDirectories: true)
+        let info: [String: Any] = [
+            "CFBundleIdentifier": "dev.klabast.fixture", "CFBundleName": "FindMy",
+            "CFBundlePackageType": "APPL", "CFBundleDevelopmentRegion": "en",
+        ]
+        try PropertyListSerialization.data(fromPropertyList: info, format: .xml, options: 0)
+            .write(to: app.appending(path: "Contents/Info.plist"))
+        if let displayName {
+            try "CFBundleDisplayName = \"\(displayName)\";\n"
+                .write(to: resources.appending(path: "InfoPlist.strings"), atomically: true, encoding: .utf8)
+        }
+        return app
+    }
+
+    @Test("an app is named the way finder names it, not after its file")
+    func localizedName() throws {
+        let localized = try fixture(displayName: "Find My")
+        defer { try? FileManager.default.removeItem(at: localized.deletingLastPathComponent()) }
+        let plain = try fixture(displayName: nil)
+        defer { try? FileManager.default.removeItem(at: plain.deletingLastPathComponent()) }
+
+        #expect(registry.appInfo(at: localized)?.name == "Find My")
+        #expect(registry.appInfo(at: plain)?.name == "FindMy")
+    }
+
     @Test("handlers carry bundle id, name, and an existing path")
     func appInfoShape() throws {
         let app = try #require(registry.defaultApplication(forScheme: "https"))

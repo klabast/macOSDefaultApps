@@ -77,6 +77,11 @@ public struct Snapshot: Equatable, Sendable, Codable {
 public struct FamilyGroup: Equatable, Sendable {
     public let name: String
     public let entries: [SnapshotEntry]
+
+    public init(name: String, entries: [SnapshotEntry]) {
+        self.name = name
+        self.entries = entries
+    }
 }
 
 extension Array where Element == SnapshotEntry {
