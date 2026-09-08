@@ -1,78 +1,75 @@
 # macOSDefaultApps
 
-View and set default application associations on macOS — file extensions, UTIs and URL schemes. A modern successor to [RCDefaultApp](https://www.rubicode.com/Software/RCDefaultApp/), [SwiftDefaultApps](https://github.com/Lord-Kamina/SwiftDefaultApps) and [duti](https://github.com/moretension/duti).
+Set which app opens which file extension, UTI or URL scheme on macOS.
 
-Ships as a macOS app and a CLI (`mda`).
+A modern successor to [RCDefaultApp](https://www.rubicode.com/Software/RCDefaultApp/), [SwiftDefaultApps](https://github.com/Lord-Kamina/SwiftDefaultApps) and [duti](https://github.com/moretension/duti).
 
-Requires macOS 15+.
+Ships as a macOS app and a CLI (`mda`). Requires macOS 15+.
 
 ## App
 
 ![By type: families in the sidebar, handler dropdown per row](docs/screenshots/by-type.png)
 
-- Browse types by family (text, code, images, …) or flip to a per-app view showing everything an app handles — including who currently owns each type
+- Browse types by family, or by app to see everything one app handles
 - Change a handler from the dropdown in each row, or pick any app via "Other…"
 - Filter across extensions, UTIs and app names (⌘F)
-- Covers every type and URL scheme your installed apps declare — ~1300 extensions and ~185 schemes on a typical Mac, not a fixed list
-- Localized: English, Deutsch, Français, Español, Italiano, Português, Nederlands, Polski, 简体中文
+- Covers every type and URL scheme your installed apps declare
+- English, Deutsch, Français, Español, Italiano, Português, Nederlands, Polski, 简体中文
 
 ## CLI
 
 ```sh
-mda --version
 mda get md                          # default handler for .md
-mda ls md                           # all candidate handlers, default marked *
-mda set com.sublimetext.4 md        # set handler for an extension
+mda ls md                           # all candidates, default marked *
+mda set com.sublimetext.4 md
 mda set com.apple.Safari public.html
 mda set com.apple.Mail mailto:
-mda dump                            # curated types with current handlers (or --json)
+mda dump                            # curated types with handlers (or --json)
 mda dump --all                      # every type your installed apps declare
-mda save                            # snapshot current handlers to ~/.mda/default
+mda save                            # snapshot handlers to ~/.mda/default
 mda apply                           # restore the default preset
-mda apply work                      # or a named one (~/.mda/work)
-mda apply settings.duti             # or any settings file, duti-compatible
+mda apply work                      # a named preset (~/.mda/work)
+mda apply settings.duti             # any duti settings file
+mda --version
 ```
 
-## Dotfiles & presets
+`md` and `.md` are extensions, `public.html` is a UTI, `mailto:` is a URL scheme. mda classifies the target itself.
 
-`mda save` writes the current associations as a plain settings file to `~/.mda/` — one file per preset, human-readable, duti-syntax. Put the folder in your dotfiles (`mda save` warns when it's not under git, because unversioned saves overwrite without history). `mda apply` restores a preset: everything that can be applied is applied, apps that aren't installed are skipped and listed, and a non-zero exit tells your bootstrap script there's leftovers — re-run after installing the missing apps, it's idempotent.
+## Presets
 
-The app has the same feature under **Presets** in the toolbar, with a preview of what would change before anything is written.
+`mda save` writes the current associations to `~/.mda/`, one plain-text file per preset, duti syntax. Put the folder in your dotfiles. It warns when the folder isn't under git.
 
-Targets are classified automatically: `md` / `.md` is an extension, `public.html` a UTI, `mailto:` a URL scheme.
+`mda apply` restores a preset. Apps that aren't installed are skipped and listed, and the exit code is non-zero so a bootstrap script can react. Re-run it after installing them.
 
-### Migrating from duti
+The app has the same thing under **Presets**, with a preview before anything is written.
 
-`mda apply` reads duti settings files as-is: three-field lines (`bundle-id  uti  role`) work unchanged — the role column is accepted and ignored, because the modern API has no role concept and always sets the all-roles default. Two bare fields mean a URL scheme, exactly like `duti -s`.
+## duti settings files
+
+`mda apply` reads them as-is. Three-field lines (`bundle-id  uti  role`) work unchanged; the role column is ignored. Two fields mean a URL scheme, like `duti -s`.
 
 ## Install
 
-Homebrew:
-
 ```sh
 brew tap klabast/tap
+brew trust klabast/tap                  # required for third-party taps
 brew install --cask macosdefaultapps    # app, with mda bundled in
 brew install mda                        # cli on its own
 ```
 
-The cask puts `mda` on your PATH too, so it covers both. The formula is only
-needed if you want the CLI without the app. Neither builds from source, so
-neither needs Xcode.
+Neither needs Xcode. The app is also on the [latest release](https://github.com/klabast/macOSDefaultApps/releases/latest) page.
 
-Or grab the app from the [latest release](https://github.com/klabast/macOSDefaultApps/releases/latest), or build from source:
+Build from source:
 
 ```sh
 swift build -c release            # cli: .build/release/mda
 scripts/package-app.sh            # app: build/macOSDefaultApps.app
 ```
 
-The app is signed and notarized, so it opens straight away. A build you make yourself with `scripts/package-app.sh` is ad-hoc signed — macOS blocks that one on first launch: System Settings → Privacy & Security → "Open Anyway".
-
 ## Notes
 
-- Changing the default browser (`http:`/`https:`) triggers a macOS consent dialog by design; it cannot be silenced.
-- macOS has no API to *remove* an association — you can only point it at another app. Stale associations are cleaned up by LaunchServices itself.
-- The extension `ts` maps to MPEG-2 Transport Stream system-wide (not TypeScript); the app shows whatever LaunchServices reports.
+- Changing the default browser triggers a macOS consent dialog. It can't be silenced.
+- There is no API to remove an association, only to point it somewhere else. LaunchServices clears out stale ones.
+- The extension `ts` is MPEG-2 Transport Stream system-wide, not TypeScript.
 
 ## License
 
