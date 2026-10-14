@@ -47,3 +47,9 @@
 "Update available" = "有可用更新";
 "Go to GitHub" = "前往 GitHub";
 "Version %@ is available, you have %@." = "有新版本 %@，当前版本为 %@。";
+"Check for updates?" = "检查更新？";
+"Check at Launch" = "启动时检查";
+"Don't Check" = "不检查";
+"At launch the app can ask GitHub for the latest release. Nothing else is sent. You can change this in Settings." = "启动时，应用可以向 GitHub 查询最新版本，不会发送其他任何内容。可在“设置”中更改。";
+"Check GitHub for updates at launch" = "启动时在 GitHub 上检查更新";
+"Installed with Homebrew: brew upgrade updates the app." = "通过 Homebrew 安装：brew upgrade 会更新此应用。";
