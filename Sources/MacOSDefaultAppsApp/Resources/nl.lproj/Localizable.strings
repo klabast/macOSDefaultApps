@@ -47,3 +47,9 @@
 "Update available" = "Update beschikbaar";
 "Go to GitHub" = "Naar GitHub";
 "Version %@ is available, you have %@." = "Versie %@ is beschikbaar, je hebt %@.";
+"Check for updates?" = "Zoeken naar updates?";
+"Check at Launch" = "Controleren bij starten";
+"Don't Check" = "Niet controleren";
+"At launch the app can ask GitHub for the latest release. Nothing else is sent. You can change this in Settings." = "Bij het starten kan de app GitHub vragen naar de nieuwste release. Verder wordt niets verstuurd. Je kunt dit wijzigen in Instellingen.";
+"Check GitHub for updates at launch" = "Bij starten op GitHub naar updates zoeken";
+"Installed with Homebrew: brew upgrade updates the app." = "Geïnstalleerd met Homebrew: brew upgrade werkt de app bij.";

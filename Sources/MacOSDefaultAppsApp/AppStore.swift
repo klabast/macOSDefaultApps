@@ -64,11 +64,16 @@ final class AppStore {
     var presetName = ""
 
     var availableUpdate: String?
+    private(set) var askAboutUpdates = false
+
+    static let checkForUpdatesKey = "checkForUpdates"
 
     private let registry: any HandlerRegistry
     private let discovery: any TypeDiscovery
     private let writer: any HandlerWriter
     private let releases: any ReleaseFeed
+    private let defaults: UserDefaults
+    let brewManaged: Bool
     private let presets: PresetStore
     private let restorePoint: RestorePoint
 
@@ -77,20 +82,36 @@ final class AppStore {
         discovery: any TypeDiscovery = InstalledAppScanner(),
         writer: any HandlerWriter = LaunchServicesWriter(),
         releases: any ReleaseFeed = GitHubReleases(),
-        locations: Locations = .standard
+        locations: Locations = .standard,
+        defaults: UserDefaults = .standard,
+        brewManaged: Bool = Homebrew.managesApp()
     ) {
         self.registry = registry
         self.discovery = discovery
         self.writer = writer
         self.releases = releases
+        self.defaults = defaults
+        self.brewManaged = brewManaged
         presets = PresetStore(directory: locations.presets)
         restorePoint = RestorePoint(directory: locations.state, registry: registry)
     }
 
-    /// No network, rate limit, whatever: an update check that fails is not
-    /// news the user needs.
+    /// Nothing leaves the machine until the user said yes once. Homebrew
+    /// installs never check: `brew upgrade` owns updates there. No network,
+    /// rate limit, whatever: a check that fails is not news the user needs.
     func checkForUpdate() async {
-        availableUpdate = try? await UpdateCheck(feed: releases).newerVersion()
+        guard !brewManaged else { return }
+        switch defaults.object(forKey: Self.checkForUpdatesKey) as? Bool {
+        case nil: askAboutUpdates = true
+        case false?: return
+        case true?: availableUpdate = try? await UpdateCheck(feed: releases).newerVersion()
+        }
+    }
+
+    func answerUpdateQuestion(check: Bool) async {
+        defaults.set(check, forKey: Self.checkForUpdatesKey)
+        askAboutUpdates = false
+        await checkForUpdate()
     }
 
     // views read these several times per render; one pass per change instead

@@ -44,6 +44,9 @@ struct MacOSDefaultAppsApp: App {
                     .keyboardShortcut("r", modifiers: .command)
             }
         }
+        Settings {
+            SettingsView()
+        }
     }
 
     private func post(_ name: Notification.Name) {

@@ -40,12 +40,14 @@ struct AppStoreTests {
     let xcode = app("com.apple.dt.Xcode", "Xcode")
     let textEdit = app("com.apple.TextEdit", "TextEdit")
     let locations: Locations
+    let defaults: UserDefaults
 
-    init() {
+    init() throws {
         let root = FileManager.default.temporaryDirectory
             .appending(path: "mda-app-tests-\(UUID().uuidString)")
         locations = Locations(
             presets: root.appending(path: "presets"), state: root.appending(path: "state"))
+        defaults = try #require(UserDefaults(suiteName: "mda-app-tests-\(UUID().uuidString)"))
     }
 
     /// md is in the bundled catalog, ipynb is not; both open in Xcode.
@@ -64,11 +66,12 @@ struct AppStoreTests {
 
     func makeStore(
         registry: any HandlerRegistry, discovery: any TypeDiscovery = FakeDiscovery(extensions: ["ipynb"]),
-        writer: FakeWriter = FakeWriter(), releases: any ReleaseFeed = FakeReleaseFeed(tag: "v0.0.1")
+        writer: FakeWriter = FakeWriter(), releases: any ReleaseFeed = FakeReleaseFeed(tag: "v0.0.1"),
+        brewManaged: Bool = false
     ) -> AppStore {
         AppStore(
             registry: registry, discovery: discovery, writer: writer, releases: releases,
-            locations: locations)
+            locations: locations, defaults: defaults, brewManaged: brewManaged)
     }
 
     @Test("reading the filtered snapshot repeatedly costs one pass, not one per read")
@@ -99,6 +102,7 @@ struct AppStoreTests {
 
     @Test("a newer release is offered, a failed check stays quiet")
     func updateCheck() async {
+        defaults.set(true, forKey: AppStore.checkForUpdatesKey)
         let store = makeStore(registry: registry, releases: FakeReleaseFeed(tag: "v9.9.9"))
         await store.checkForUpdate()
         #expect(store.availableUpdate == "9.9.9")
@@ -109,6 +113,53 @@ struct AppStoreTests {
         await offline.checkForUpdate()
         #expect(offline.availableUpdate == nil)
         #expect(offline.errorMessage == nil)
+    }
+
+    @Test("first launch asks before talking to github")
+    func updateCheckAsksFirst() async {
+        let store = makeStore(registry: registry, releases: FakeReleaseFeed(tag: "v9.9.9"))
+
+        await store.checkForUpdate()
+
+        #expect(store.askAboutUpdates)
+        #expect(store.availableUpdate == nil)
+    }
+
+    @Test("saying yes remembers it and checks right away")
+    func updateCheckYes() async {
+        let store = makeStore(registry: registry, releases: FakeReleaseFeed(tag: "v9.9.9"))
+        await store.checkForUpdate()
+
+        await store.answerUpdateQuestion(check: true)
+
+        #expect(!store.askAboutUpdates)
+        #expect(store.availableUpdate == "9.9.9")
+        #expect(defaults.object(forKey: AppStore.checkForUpdatesKey) as? Bool == true)
+    }
+
+    @Test("saying no remembers it: no check, no asking again")
+    func updateCheckNo() async {
+        let store = makeStore(registry: registry, releases: FakeReleaseFeed(tag: "v9.9.9"))
+        await store.checkForUpdate()
+        await store.answerUpdateQuestion(check: false)
+
+        let nextLaunch = makeStore(registry: registry, releases: FakeReleaseFeed(tag: "v9.9.9"))
+        await nextLaunch.checkForUpdate()
+
+        #expect(store.availableUpdate == nil)
+        #expect(!nextLaunch.askAboutUpdates)
+        #expect(nextLaunch.availableUpdate == nil)
+    }
+
+    @Test("a homebrew install never asks and never checks")
+    func updateCheckHomebrew() async {
+        let store = makeStore(registry: registry, releases: FakeReleaseFeed(tag: "v9.9.9"), brewManaged: true)
+        await store.checkForUpdate()
+        defaults.set(true, forKey: AppStore.checkForUpdatesKey)
+        await store.checkForUpdate()
+
+        #expect(!store.askAboutUpdates)
+        #expect(store.availableUpdate == nil)
     }
 
     @Test("reload joins the bundled catalog with discovered types and records the restore point")

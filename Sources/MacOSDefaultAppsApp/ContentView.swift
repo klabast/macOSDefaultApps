@@ -52,6 +52,20 @@ struct ContentView: View {
                     localized: "Version \(store.availableUpdate ?? "") is available, you have \(Version.current).",
                     bundle: .module))
         }
+        .alert(
+            t("Check for updates?"),
+            isPresented: Binding(get: { store.askAboutUpdates }, set: { _ in })
+        ) {
+            Button(t("Check at Launch")) {
+                Task { await store.answerUpdateQuestion(check: true) }
+            }
+            .keyboardShortcut(.defaultAction)
+            Button(t("Don't Check")) {
+                Task { await store.answerUpdateQuestion(check: false) }
+            }
+        } message: {
+            Text(t("At launch the app can ask GitHub for the latest release. Nothing else is sent. You can change this in Settings."))
+        }
         .task { await store.reload() }
         .task { await store.checkForUpdate() }
         .onReceive(
